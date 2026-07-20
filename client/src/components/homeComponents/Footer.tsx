@@ -87,8 +87,8 @@ const Footer = () => {
           <div className="flex flex-col gap-5 max-w-[280px] flex-shrink-0 max-[900px]:max-w-full">
             <Logo variant="light" />
 
-            <p className="font-sans text-[14px] leading-[1.65] text-white/60 m-0">
-              Empowering learners through structured Haitian Kreyòl &amp; 
+            <p className="font-sans text-[15px] leading-[1.65] text-white/60 m-0">
+              Empowering learners through structured Haitian Kreyòl and
               certified translation services.
             </p>
 

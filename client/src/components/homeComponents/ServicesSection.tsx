@@ -17,7 +17,7 @@ const services: Service[] = [
   {
     id: "language-learning",
     title: "Language Learning",
-    desc: "Structured Haitian Kreyòl and English courses designed for beginners to advanced learners of all ages.",
+    desc: "Structured Haitian Kreyòl and language courses designed for beginners to advanced learners of all ages.",
     link: "/services",
     dark: true,
     icon: "/servicesSection-icons/language-learning.png",
@@ -33,7 +33,7 @@ const services: Service[] = [
   {
     id: "cultural-integration",
     title: "Cultural Integration",
-    desc: "Programs and workshops to help individuals and families navigate cultural transitions with confidence.",
+    desc: "Workshops to help individuals and families navigate cultural transitions with confidence.",
     link: "/services",
     dark: true,
     icon: "/servicesSection-icons/cultural-integration.png",
@@ -188,7 +188,7 @@ const ServicesSection = () => {
             style={{ fontSize: "clamp(36px,4.5vw,56px)" }}
           >
             Our services are{" "}
-            <em className="italic text-[#080c18]">specifically</em>{" "}
+            <em className="italic text-haiti-red">specifically</em>{" "}
             designed to meet your needs.
           </h2>
         </div>
@@ -211,7 +211,7 @@ const ServicesSection = () => {
             className="font-sans text-[#6B7280] m-0"
             style={{ fontSize: "clamp(15px,2vw,18px)" }}
           >
-            From strategy to execution, explore everything we can do for you.
+            Build real language skills, one conversation at a time.
           </p>
 
           {/* "View All Services" pill */}

@@ -17,7 +17,7 @@ const CORE_VALUES: CoreValue[] = [
   {
     Icon: FaGlobe,
     title: "Cultural Authenticity",
-    description: "We don't teach language in a vacuum. We celebrate the rich history, idioms, folklore, and soul of Haiti in everything we do.",
+    description: "Our courses are built around real communication goals, combining expert instruction with interactive exercises that make learning effective and enjoyable.",
     badge: "Heritage",
     colorClass: "text-haiti-red",
     bgLightClass: "bg-haiti-red/[0.04]",
@@ -25,7 +25,7 @@ const CORE_VALUES: CoreValue[] = [
   {
     Icon: FaGraduationCap,
     title: "Structured Excellence",
-    description: "Our curricula are engineered for real outcomes—merging traditional educational theories with engaging interactive exercises.",
+    description: "Our courses are built around real communication goals, combining expert instruction with interactive exercises that make learning effective and enjoyable.",
     badge: "Education",
     colorClass: "text-haiti-navy",
     bgLightClass: "bg-haiti-navy/[0.04]",
@@ -33,7 +33,7 @@ const CORE_VALUES: CoreValue[] = [
   {
     Icon: FaAward,
     title: "Rigorous Precision",
-    description: "For translations, every syllable matters. We perform strict triple-check reviews to guarantee official, flawless certifications.",
+    description: "For translations, every detail matters. We follow a rigorous review process to ensure accuracy, reliability, and certified documents that meet professional standards.",
     badge: "Accuracy",
     colorClass: "text-haiti-red",
     bgLightClass: "bg-haiti-red/[0.04]",
@@ -41,7 +41,7 @@ const CORE_VALUES: CoreValue[] = [
   {
     Icon: FaUsers,
     title: "Diaspora Empowerment",
-    description: "We serve as the bridge that reconnects generations, empowering professional careers and strengthening family bonds.",
+    description: "We bridge language gaps, helping generations reconnect, professionals advance, and families strengthen their cultural connections.",
     badge: "Community",
     colorClass: "text-haiti-navy",
     bgLightClass: "bg-haiti-navy/[0.04]",

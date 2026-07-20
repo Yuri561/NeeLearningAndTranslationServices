@@ -8,7 +8,7 @@ interface AccordionItem {
 const accordionItems: AccordionItem[] = [
   {
     title: "Structured path to fluency",
-    body: "We design thoughtful systems that reduce complexity, improve performance, and help students move faster with clarity.",
+    body: "We design engaging language tools that reduce complexity, improve retention, and help learners communicate with confidence.",
   },
   {
     title: "Expert cultural context",
@@ -16,7 +16,7 @@ const accordionItems: AccordionItem[] = [
   },
   {
     title: "Certified accuracy & trust",
-    body: "We develop educational curriculums and certified documents that ensure you navigate academic, professional, and legal goals with confidence.",
+    body: "We create easy-to-follow language programs and practical learning materials that help you speak confidently in everyday situations.",
   },
 ];
 
@@ -152,11 +152,11 @@ const ProcessSection = () => {
         >
           <div className="flex-shrink-0 max-[1024px]:w-full">
             <img
-              src="/process-section.jpg"
+              src="/process-section2.jpg"
               alt="Professional classroom and student learning environment"
               loading="lazy"
               decoding="async"
-              className="w-[580px] h-[696px] rounded-[15px] block border border-blue-700/20 shadow-xs transition-[transform,box-shadow] duration-[600ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] [@media(hover:hover)]:hover:-translate-y-0.5 max-[1024px]:w-full max-[1024px]:h-auto max-[1024px]:max-h-[480px] max-[1024px]:object-cover max-[580px]:max-h-[320px]"
+              className="w-[580px] h-[596px] rounded-[15px] block border border-blue-700/20 shadow-xs transition-[transform,box-shadow] duration-[600ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] [@media(hover:hover)]:hover:-translate-y-0.5 max-[1024px]:w-full max-[1024px]:h-auto max-[1024px]:max-h-[480px] max-[1024px]:object-cover max-[580px]:max-h-[320px]"
             />
           </div>
 
@@ -177,10 +177,8 @@ const ProcessSection = () => {
                 have the perfect control.
               </h2>
               <p className="font-sans text-base leading-[1.65] text-[#6B7280] m-0 text-left">
-                Our team delivers fast, reliable, and student-focused solutions
-                designed to simplify the learning journey and enhance everyday
-                experiences. With a strong focus on adaptability and innovation,
-                we turn complex challenges into seamless, intuitive results.
+                Our team creates simple, effective language learning experiences that help students learn with confidence. 
+                We focus on clear lessons, practical practice, and engaging activities to make learning a new language easier and more enjoyable.
               </p>
             </div>
 

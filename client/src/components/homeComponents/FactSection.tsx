@@ -76,7 +76,7 @@ const FactSection = () => {
 
           {/* Title */}
           <h2 className="flex flex-wrap gap-[10px] m-0">
-            {["Learning", "Haitian", "Creole"].map((w) => (
+            {["Learn", "Haitian", "Creole"].map((w) => (
               <span
                 key={w}
                 className="font-roxborough font-bold text-white"
@@ -89,15 +89,14 @@ const FactSection = () => {
               className="font-roxborough font-bold italic text-[#ff4d4d]"
               style={{ fontSize: "clamp(36px,5vw,64px)" }}
             >
-              &amp; Translation
+              {/* &amp; Translation */}
             </span>
           </h2>
 
           {/* Subtext */}
           <p className="text-[18px] leading-[1.6] text-white/75 m-0 max-w-[600px] max-md:text-[16px]">
-            Break language barriers with AI-powered Haitian Creole learning and
-            smart document translation. Understand, translate, and communicate
-            naturally across languages.
+          Break language barriers with expert tutoring in Haitian Creole, English, Spanish, and French, along with professional translation services. 
+          Learn with confidence, communicate effectively, and connect across languages.
           </p>
 
           {/* Divider */}

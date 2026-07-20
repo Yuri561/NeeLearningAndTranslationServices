@@ -49,7 +49,8 @@ export const AboutStory = () => {
           </h2>
           
           <p className="text-[#6B7280] leading-relaxed text-base sm:text-lg font-sans">
-            Nee's Learning & Translation Services was established to help students, professionals, and families celebrate and navigate the rich linguistic landscapes of English and Haitian Creole. What started as simple, native-speaker tutoring has evolved into a certified gateway connecting diaspora generations and global corporate clients.
+            Nee's Learning & Translation Services was founded to help students, professionals, and families connect through the beauty and richness of Haitian Creole.
+            What began as a passion for sharing the language and culture has grown into a trusted service providing expert instruction and certified translation solutions for individuals and communities.
           </p>
 
           {/* Structured point grid */}
@@ -60,7 +61,7 @@ export const AboutStory = () => {
               </div>
               <h4 className="font-roxborough text-lg font-bold text-haiti-navy">Linguistic Pride</h4>
               <p className="text-xs sm:text-sm text-[#6B7280] leading-relaxed">
-                We empower families to maintain deep cultural roots and keep generations connected through genuine language instruction.
+                We support students gain confidence, understanding cultural traditions, and connecting with their language through authentic language instruction.
               </p>
             </div>
 
@@ -70,7 +71,7 @@ export const AboutStory = () => {
               </div>
               <h4 className="font-roxborough text-lg font-bold text-haiti-navy">Certified Integrity</h4>
               <p className="text-xs sm:text-sm text-[#6B7280] leading-relaxed">
-                We translate official legal, medical, and administrative documents under standard-setting professional certification.
+                We provide accurate, certified translations for essential documents, supporting legal, medical, and administrative needs.
               </p>
             </div>
           </div>
