@@ -5,11 +5,11 @@ import type {
   AvailabilitySlot,
   LearningServiceWithTutor,
   SupportedLanguagesResponse,
-  StudentProfile,
+  LearnerProfile,
   TranslationFile,
   TranslateRequest,
   TranslateResponse,
-  UpdateStudentProfilePayload,
+  UpdateLearnerProfilePayload,
 } from "./learnerTypes";
 
 type RawLearningServiceTutor = Omit<
@@ -153,12 +153,54 @@ export const learnerApi = {
     }
   },
 
-  getMyStudentProfile: () =>
-    apiRequest<StudentProfile>("/api/v1/student-profiles/me", {}, true),
+  getMyLearnerProfile: () =>
+    apiRequest<LearnerProfile>("/api/v1/learner-profiles/me", {}, true),
 
-  updateMyStudentProfile: (payload: UpdateStudentProfilePayload) =>
-    apiRequest<StudentProfile>(
-      "/api/v1/student-profiles/me",
+  getLearnerProfileByUserId: (userId: number) =>
+    apiRequest<LearnerProfile>(
+      `/api/v1/learner-profiles/${encodeURIComponent(userId)}`,
+      {},
+      true
+    ),
+
+  updateMyLearnerProfile: (payload: UpdateLearnerProfilePayload) =>
+    apiRequest<LearnerProfile>(
+      "/api/v1/learner-profiles/me",
+      {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      },
+      true
+    ),
+
+  uploadMyProfilePicture: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return apiRequest<LearnerProfile>(
+      "/api/v1/learner-profiles/me/profile-picture",
+      {
+        method: "POST",
+        body: formData,
+      },
+      true
+    );
+  },
+
+  deleteMyProfilePicture: () =>
+    apiRequest<LearnerProfile>(
+      "/api/v1/learner-profiles/me/profile-picture",
+      { method: "DELETE" },
+      true
+    ),
+
+  // Compatibility names for code that still uses the former student terminology.
+  getMyStudentProfile: () =>
+    apiRequest<LearnerProfile>("/api/v1/learner-profiles/me", {}, true),
+
+  updateMyStudentProfile: (payload: UpdateLearnerProfilePayload) =>
+    apiRequest<LearnerProfile>(
+      "/api/v1/learner-profiles/me",
       {
         method: "PUT",
         body: JSON.stringify(payload),

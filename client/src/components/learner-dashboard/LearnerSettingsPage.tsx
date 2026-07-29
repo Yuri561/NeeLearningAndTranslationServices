@@ -1,503 +1,207 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import {
-  FiUser,
   FiAlertCircle,
-  FiEye,
-  FiEyeOff,
-  FiKey,
+  FiCheckCircle,
+  FiRefreshCw,
+  FiShield,
+  FiUser,
+  FiSliders,
 } from "react-icons/fi";
 import { useCurrentUser } from "../../features/auth/authQueries";
-import { ErrorState } from "../ui/adminUi";
+import { useMyLearnerProfile } from "../../features/learner/learnerQueries";
 import { getErrorMessage } from "../ui/adminFormat";
+import { PasswordSettingsPanel } from "./learner-settings/PasswordSettingsPanel";
+import { ProfileSettingsPanel } from "./learner-settings/ProfileSettingsPanel";
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+type SettingsTab = "profile" | "security";
+
+const tabs = [
+  {
+    id: "profile" as const,
+    label: "Profile Settings",
+    description: "Personal info, bio & learning goals",
+    icon: FiUser,
+  },
+  {
+    id: "security" as const,
+    label: "Security & Login",
+    description: "Password updates & account safety",
+    icon: FiShield,
+  },
+];
 
 export const LearnerSettingsPage = () => {
+  const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const userQuery = useCurrentUser();
+  const profileQuery = useMyLearnerProfile();
   const user = userQuery.data;
+  const profile = profileQuery.data;
 
-  // Form states - Personal Info
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [infoErrors, setInfoErrors] = useState<Record<string, string>>({});
-  const [infoSubmitPending, setInfoSubmitPending] = useState(false);
-  const [infoSubmitNotice, setInfoSubmitNotice] = useState("");
+  const completion = useMemo(() => {
+    const fields = [
+      user?.full_name,
+      user?.email,
+      profile?.bio?.trim(),
+      profile?.learning_goals?.trim(),
+      profile?.preferred_language,
+      profile?.profile_picture_url,
+    ];
+    return Math.round((fields.filter(Boolean).length / fields.length) * 100);
+  }, [profile, user]);
 
-  // Form states - Password
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showCurrent, setShowCurrent] = useState(false);
-  const [showNew, setShowNew] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
-  const [passwordSubmitPending, setPasswordSubmitPending] = useState(false);
-  const [passwordSubmitNotice, setPasswordSubmitNotice] = useState("");
-
-  // Sync initial values once user profile is loaded
-  useEffect(() => {
-    if (user) {
-      setFullName(user.full_name ?? "");
-      setEmail(user.email ?? "");
-    }
-  }, [user]);
-
-  // Reset Personal Info form to last saved state
-  const resetInfoForm = () => {
-    if (user) {
-      setFullName(user.full_name ?? "");
-      setEmail(user.email ?? "");
-      setInfoErrors({});
-      setInfoSubmitNotice("");
-    }
+  const retry = () => {
+    void userQuery.refetch();
+    void profileQuery.refetch();
   };
 
-  // Reset Password form
-  const resetPasswordForm = () => {
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    setPasswordErrors({});
-    setPasswordSubmitNotice("");
-  };
+  if (userQuery.isLoading || profileQuery.isLoading) {
+    return (
+      <section className="space-y-6" aria-label="Loading account settings">
+        <div className="h-36 animate-pulse rounded-3xl bg-slate-200/80" />
+        <div className="h-[34rem] animate-pulse rounded-3xl bg-slate-100" />
+      </section>
+    );
+  }
 
-  // Submit Personal Info changes
-  const handleSaveInfo = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (infoSubmitPending) return;
-
-    // Client-side validations
-    const errors: Record<string, string> = {};
-    if (!fullName.trim()) {
-      errors.fullName = "Full name is required";
-    } else if (fullName.trim().length < 2) {
-      errors.fullName = "Full name must contain at least 2 characters";
-    }
-
-    if (!email.trim()) {
-      errors.email = "Email is required";
-    } else if (!EMAIL_REGEX.test(email.trim())) {
-      errors.email = "Please enter a valid email address";
-    }
-
-    if (Object.keys(errors).length > 0) {
-      setInfoErrors(errors);
-      setInfoSubmitNotice("");
-      return;
-    }
-
-    setInfoErrors({});
-    setInfoSubmitNotice("");
-    setInfoSubmitPending(true);
-
-    // Simulate validation/loading state before presenting the notice banner
-    setTimeout(() => {
-      setInfoSubmitPending(false);
-      setInfoSubmitNotice(
-        "Profile editing is not available yet because the backend update API has not been implemented."
-      );
-    }, 800);
-  };
-
-  // Submit Password changes
-  const handleUpdatePassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (passwordSubmitPending) return;
-
-    // Client-side validations
-    const errors: Record<string, string> = {};
-
-    if (!currentPassword) {
-      errors.currentPassword = "Current password is required";
-    }
-
-    if (!newPassword) {
-      errors.newPassword = "New password is required";
-    } else {
-      if (newPassword.length < 8) {
-        errors.newPassword = "New password must contain at least 8 characters";
-      }
-      if (!/[A-Z]/.test(newPassword)) {
-        errors.newPassword = (errors.newPassword ? errors.newPassword + ". " : "") + "Must contain at least one uppercase letter";
-      }
-      if (!/[a-z]/.test(newPassword)) {
-        errors.newPassword = (errors.newPassword ? errors.newPassword + ". " : "") + "Must contain at least one lowercase letter";
-      }
-      if (!/[0-9]/.test(newPassword)) {
-        errors.newPassword = (errors.newPassword ? errors.newPassword + ". " : "") + "Must contain at least one number";
-      }
-    }
-
-    if (!confirmPassword) {
-      errors.confirmPassword = "Confirm password is required";
-    } else if (confirmPassword !== newPassword) {
-      errors.confirmPassword = "Passwords do not match";
-    }
-
-    if (newPassword && currentPassword && newPassword === currentPassword) {
-      errors.newPassword = "The new password must not be the same as the current password";
-    }
-
-    if (Object.keys(errors).length > 0) {
-      setPasswordErrors(errors);
-      setPasswordSubmitNotice("");
-      return;
-    }
-
-    setPasswordErrors({});
-    setPasswordSubmitNotice("");
-    setPasswordSubmitPending(true);
-
-    // Simulate validation/loading state before presenting the notice banner
-    setTimeout(() => {
-      setPasswordSubmitPending(false);
-      setPasswordSubmitNotice(
-        "Password updates are not available yet because the backend change-password API has not been implemented."
-      );
-    }, 800);
-  };
-
-  const isLoading = userQuery.isLoading;
-  const isError = userQuery.isError;
+  if (userQuery.isError || profileQuery.isError || !user) {
+    return (
+      <section className="rounded-3xl border border-red-100 bg-white px-6 py-14 text-center shadow-sm">
+        <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-red-50 text-red-600">
+          <FiAlertCircle className="size-6" />
+        </span>
+        <h1 className="mt-4 text-xl font-extrabold text-slate-950">
+          We couldn’t load your settings
+        </h1>
+        <p className="mx-auto mt-2 max-w-md text-sm font-medium leading-6 text-slate-500">
+          {getErrorMessage(userQuery.error ?? profileQuery.error)}
+        </p>
+        <button
+          type="button"
+          onClick={retry}
+          className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-haiti-navy px-6 text-sm font-bold text-white transition hover:bg-haiti-navy-dark shadow-sm"
+        >
+          <FiRefreshCw className="size-4" />
+          Try again
+        </button>
+      </section>
+    );
+  }
 
   return (
     <section className="space-y-6">
-      {/* Page Header */}
-      <div className="overflow-hidden rounded-3xl bg-haiti-navy px-5 py-7 text-white shadow-sm sm:px-8 sm:py-9">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-200">
-            Account settings
-          </p>
-          <h1 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">Learner Settings</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100">
-            Manage your personal information and account security.
-          </p>
+      {/* Hero Banner matching other Learner pages */}
+      <div className="overflow-hidden rounded-3xl bg-linear-to-br from-haiti-navy via-[#083b8d] to-haiti-navy-dark px-5 py-7 text-white shadow-[0_18px_50px_rgba(6,67,159,.18)] sm:px-8 sm:py-9">
+        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div>
+            <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-200">
+              <FiSliders className="size-3.5" /> Learner Preferences
+            </p>
+            <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+              Account & Profile Settings
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100">
+              Customize your profile details, learning objectives, language preferences, and manage your sign-in security.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
+              <div>
+                <p className="text-xl font-extrabold text-white">{completion}%</p>
+                <p className="text-[0.7rem] font-semibold uppercase tracking-wider text-blue-100">
+                  Profile completed
+                </p>
+              </div>
+              <div className="relative size-9">
+                <svg className="size-full -rotate-90" viewBox="0 0 36 36">
+                  <path
+                    className="text-white/20"
+                    strokeWidth="3.5"
+                    stroke="currentColor"
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    className="text-emerald-400 transition-all duration-700"
+                    strokeDasharray={`${completion}, 100`}
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    stroke="currentColor"
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-4 py-3.5 backdrop-blur text-xs font-bold text-white">
+              <span className="relative flex size-2.5">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex size-2.5 rounded-full bg-emerald-400" />
+              </span>
+              <FiCheckCircle className="size-4 text-emerald-300" />
+              Account Active
+            </div>
+          </div>
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="h-96 animate-pulse rounded-3xl bg-slate-100" />
-          <div className="h-96 animate-pulse rounded-3xl bg-slate-100" />
-        </div>
-      ) : isError ? (
-        <ErrorState
-          title="Could not load settings data"
-          message={getErrorMessage(userQuery.error)}
-          onRetry={() => userQuery.refetch()}
-        />
-      ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Card 1: Personal Information */}
-          <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6 flex flex-col justify-between">
-            <form onSubmit={handleSaveInfo} className="space-y-6 flex-1 flex flex-col justify-between">
-              <div>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-haiti-red">
-                      Personal info
-                    </span>
-                    <h2 className="mt-1 text-lg font-extrabold text-slate-900">
-                      Personal Information
-                    </h2>
-                    <p className="mt-1.5 text-xs font-semibold text-slate-400">
-                      Update your display name and registered email address.
-                    </p>
-                  </div>
-                  <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-blue-50 text-haiti-navy">
-                    <FiUser className="size-5" />
+      {/* Main Tabbed Settings Container */}
+      <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_14px_45px_rgba(15,23,42,.055)]">
+        {/* Navigation Tabs Bar */}
+        <nav
+          className="grid border-b border-slate-200/80 bg-slate-50/70 p-2 sm:grid-cols-2"
+          aria-label="Settings sections"
+        >
+          {tabs.map(({ id, label, description, icon: Icon }) => {
+            const isActive = activeTab === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setActiveTab(id)}
+                aria-selected={isActive}
+                role="tab"
+                className={`relative flex items-center gap-4 rounded-2xl px-5 py-4 text-left transition duration-200 ${
+                  isActive
+                    ? "bg-white text-haiti-navy shadow-sm ring-1 ring-slate-200/80"
+                    : "text-slate-500 hover:bg-white/60 hover:text-slate-800"
+                }`}
+              >
+                <span
+                  className={`grid size-11 shrink-0 place-items-center rounded-xl transition ${
+                    isActive
+                      ? "bg-blue-50 text-haiti-navy ring-1 ring-blue-100"
+                      : "bg-slate-100 text-slate-400"
+                  }`}
+                >
+                  <Icon className="size-5" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-extrabold text-slate-900">{label}</span>
+                  <span className="mt-0.5 block text-xs font-semibold text-slate-400 truncate">
+                    {description}
                   </span>
-                </div>
+                </span>
+              </button>
+            );
+          })}
+        </nav>
 
-                <div className="mt-6 space-y-4">
-                  {/* Full Name Field */}
-                  <label className="block">
-                    <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
-                      Full Name
-                    </span>
-                    <input
-                      type="text"
-                      value={fullName}
-                      onChange={(e) => {
-                        setFullName(e.target.value);
-                        if (infoErrors.fullName) {
-                          setInfoErrors((prev) => {
-                            const copy = { ...prev };
-                            delete copy.fullName;
-                            return copy;
-                          });
-                        }
-                      }}
-                      className={`h-11 w-full rounded-xl border px-4 text-sm font-semibold text-slate-700 outline-none transition ${
-                        infoErrors.fullName
-                          ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-50"
-                          : "border-slate-200 bg-slate-50/50 hover:border-slate-300 focus:border-haiti-navy focus:bg-white"
-                      }`}
-                      placeholder="Enter your full name"
-                    />
-                    {infoErrors.fullName && (
-                      <p className="mt-1.5 text-xs font-bold text-red-500 flex items-center gap-1">
-                        <FiAlertCircle />
-                        {infoErrors.fullName}
-                      </p>
-                    )}
-                  </label>
-
-                  {/* Email Field */}
-                  <label className="block">
-                    <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
-                      Email Address
-                    </span>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        if (infoErrors.email) {
-                          setInfoErrors((prev) => {
-                            const copy = { ...prev };
-                            delete copy.email;
-                            return copy;
-                          });
-                        }
-                      }}
-                      className={`h-11 w-full rounded-xl border px-4 text-sm font-semibold text-slate-700 outline-none transition ${
-                        infoErrors.email
-                          ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-50"
-                          : "border-slate-200 bg-slate-50/50 hover:border-slate-300 focus:border-haiti-navy focus:bg-white"
-                      }`}
-                      placeholder="Enter your email"
-                    />
-                    {infoErrors.email && (
-                      <p className="mt-1.5 text-xs font-bold text-red-500 flex items-center gap-1">
-                        <FiAlertCircle />
-                        {infoErrors.email}
-                      </p>
-                    )}
-                  </label>
-                </div>
-              </div>
-
-              {/* Bottom Notice & Buttons */}
-              <div className="mt-6 pt-5 border-t border-slate-100">
-                {infoSubmitNotice && (
-                  <div className="mb-4 flex gap-2.5 rounded-xl border border-blue-100 bg-blue-50/40 p-4.5 text-xs font-semibold text-haiti-navy">
-                    <FiAlertCircle className="size-4 shrink-0 text-blue-600" />
-                    <span>{infoSubmitNotice}</span>
-                  </div>
-                )}
-
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    type="submit"
-                    disabled={infoSubmitPending}
-                    className="inline-flex min-h-11 min-w-[7.5rem] items-center justify-center gap-1.5 rounded-xl bg-haiti-navy px-5 text-sm font-bold text-white shadow-xs transition hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-haiti-navy disabled:pointer-events-none disabled:opacity-50"
-                  >
-                    {infoSubmitPending ? (
-                      <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    ) : (
-                      "Save Changes"
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={resetInfoForm}
-                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 shadow-xs transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-haiti-navy"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </form>
-          </article>
-
-          {/* Card 2: Password and Security */}
-          <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6 flex flex-col justify-between">
-            <form onSubmit={handleUpdatePassword} className="space-y-6 flex-1 flex flex-col justify-between">
-              <div>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-haiti-red">
-                      Security
-                    </span>
-                    <h2 className="mt-1 text-lg font-extrabold text-slate-900">
-                      Password and Security
-                    </h2>
-                    <p className="mt-1.5 text-xs font-semibold text-slate-400">
-                      Change your password to keep your account safe.
-                    </p>
-                  </div>
-                  <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-purple-50 text-purple-600">
-                    <FiKey className="size-5" />
-                  </span>
-                </div>
-
-                <div className="mt-6 space-y-4">
-                  {/* Current Password Field */}
-                  <label className="block">
-                    <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
-                      Current Password
-                    </span>
-                    <div className="relative">
-                      <input
-                        type={showCurrent ? "text" : "password"}
-                        value={currentPassword}
-                        onChange={(e) => {
-                          setCurrentPassword(e.target.value);
-                          if (passwordErrors.currentPassword) {
-                            setPasswordErrors((prev) => {
-                              const copy = { ...prev };
-                              delete copy.currentPassword;
-                              return copy;
-                            });
-                          }
-                        }}
-                        className={`h-11 w-full rounded-xl border pl-4 pr-11 text-sm font-semibold text-slate-700 outline-none transition ${
-                          passwordErrors.currentPassword
-                            ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-50"
-                            : "border-slate-200 bg-slate-50/50 hover:border-slate-300 focus:border-haiti-navy focus:bg-white"
-                        }`}
-                        placeholder="••••••••"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowCurrent(!showCurrent)}
-                        className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600"
-                        aria-label={showCurrent ? "Hide current password" : "Show current password"}
-                      >
-                        {showCurrent ? <FiEyeOff className="size-4" /> : <FiEye className="size-4" />}
-                      </button>
-                    </div>
-                    {passwordErrors.currentPassword && (
-                      <p className="mt-1.5 text-xs font-bold text-red-500 flex items-center gap-1">
-                        <FiAlertCircle />
-                        {passwordErrors.currentPassword}
-                      </p>
-                    )}
-                  </label>
-
-                  {/* New Password Field */}
-                  <label className="block">
-                    <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
-                      New Password
-                    </span>
-                    <div className="relative">
-                      <input
-                        type={showNew ? "text" : "password"}
-                        value={newPassword}
-                        onChange={(e) => {
-                          setNewPassword(e.target.value);
-                          if (passwordErrors.newPassword) {
-                            setPasswordErrors((prev) => {
-                              const copy = { ...prev };
-                              delete copy.newPassword;
-                              return copy;
-                            });
-                          }
-                        }}
-                        className={`h-11 w-full rounded-xl border pl-4 pr-11 text-sm font-semibold text-slate-700 outline-none transition ${
-                          passwordErrors.newPassword
-                            ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-50"
-                            : "border-slate-200 bg-slate-50/50 hover:border-slate-300 focus:border-haiti-navy focus:bg-white"
-                        }`}
-                        placeholder="••••••••"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowNew(!showNew)}
-                        className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600"
-                        aria-label={showNew ? "Hide new password" : "Show new password"}
-                      >
-                        {showNew ? <FiEyeOff className="size-4" /> : <FiEye className="size-4" />}
-                      </button>
-                    </div>
-                    {passwordErrors.newPassword && (
-                      <p className="mt-1.5 text-xs font-bold text-red-500 flex items-start gap-1 leading-snug">
-                        <FiAlertCircle className="mt-0.5 shrink-0" />
-                        <span>{passwordErrors.newPassword}</span>
-                      </p>
-                    )}
-                  </label>
-
-                  {/* Confirm New Password Field */}
-                  <label className="block">
-                    <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
-                      Confirm New Password
-                    </span>
-                    <div className="relative">
-                      <input
-                        type={showConfirm ? "text" : "password"}
-                        value={confirmPassword}
-                        onChange={(e) => {
-                          setConfirmPassword(e.target.value);
-                          if (passwordErrors.confirmPassword) {
-                            setPasswordErrors((prev) => {
-                              const copy = { ...prev };
-                              delete copy.confirmPassword;
-                              return copy;
-                            });
-                          }
-                        }}
-                        className={`h-11 w-full rounded-xl border pl-4 pr-11 text-sm font-semibold text-slate-700 outline-none transition ${
-                          passwordErrors.confirmPassword
-                            ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-50"
-                            : "border-slate-200 bg-slate-50/50 hover:border-slate-300 focus:border-haiti-navy focus:bg-white"
-                        }`}
-                        placeholder="••••••••"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirm(!showConfirm)}
-                        className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600"
-                        aria-label={showConfirm ? "Hide confirm password" : "Show confirm password"}
-                      >
-                        {showConfirm ? <FiEyeOff className="size-4" /> : <FiEye className="size-4" />}
-                      </button>
-                    </div>
-                    {passwordErrors.confirmPassword && (
-                      <p className="mt-1.5 text-xs font-bold text-red-500 flex items-center gap-1">
-                        <FiAlertCircle />
-                        {passwordErrors.confirmPassword}
-                      </p>
-                    )}
-                  </label>
-                </div>
-              </div>
-
-              {/* Bottom Notice & Buttons */}
-              <div className="mt-6 pt-5 border-t border-slate-100">
-                {passwordSubmitNotice && (
-                  <div className="mb-4 flex gap-2.5 rounded-xl border border-blue-100 bg-blue-50/40 p-4.5 text-xs font-semibold text-haiti-navy">
-                    <FiAlertCircle className="size-4 shrink-0 text-blue-600" />
-                    <span>{passwordSubmitNotice}</span>
-                  </div>
-                )}
-
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    type="submit"
-                    disabled={passwordSubmitPending}
-                    className="inline-flex min-h-11 min-w-[8.5rem] items-center justify-center gap-1.5 rounded-xl bg-haiti-navy px-5 text-sm font-bold text-white shadow-xs transition hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-haiti-navy disabled:pointer-events-none disabled:opacity-50"
-                  >
-                    {passwordSubmitPending ? (
-                      <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    ) : (
-                      "Update Password"
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={resetPasswordForm}
-                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 shadow-xs transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-haiti-navy"
-                  >
-                    Reset Form
-                  </button>
-                </div>
-              </div>
-            </form>
-          </article>
+        {/* Tab Panel */}
+        <div role="tabpanel">
+          {activeTab === "profile" ? (
+            <ProfileSettingsPanel
+              key={`${profile?.id ?? "new"}-${profile?.created_at ?? ""}`}
+              user={user}
+              profile={profile ?? null}
+              completion={completion}
+            />
+          ) : (
+            <PasswordSettingsPanel user={user} />
+          )}
         </div>
-      )}
+      </div>
     </section>
   );
 };

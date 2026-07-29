@@ -2,6 +2,8 @@ import { apiRequest } from "../../lib/apiClient";
 import type {
   AuthToken,
   AuthUser,
+  ChangePasswordInput,
+  ChangePasswordResult,
   GoogleAuthorization,
   LoginInput,
   RegisterInput,
@@ -53,6 +55,21 @@ export const authApi = {
     ),
 
   getMe: () => apiRequest<unknown>("/api/v1/auth/me", {}, true).then(normalizeAuthUser),
+
+  changePassword: async (input: ChangePasswordInput): Promise<ChangePasswordResult> => {
+    const response = await apiRequest<string | ChangePasswordResult>(
+      "/api/v1/auth/change-password",
+      {
+        method: "POST",
+        body: JSON.stringify(input),
+      },
+      true
+    );
+
+    return typeof response === "string"
+      ? { message: response }
+      : { message: response?.message ?? "Password changed successfully" };
+  },
 
   getGoogleAuthorization: () =>
     apiRequest<GoogleAuthorization>("/api/v1/auth/google/login"),

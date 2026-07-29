@@ -107,20 +107,27 @@ export type TranslationFile = {
   related_translation_request_id: number | null;
 };
 
-export type StudentProfile = {
+export type LearnerProfile = {
   id: number;
   user_id: number;
   bio: string | null;
   learning_goals: string | null;
   preferred_language: string | null;
+  profile_picture_url: string | null;
   created_at: string;
 };
 
-export type UpdateStudentProfilePayload = {
+export type UpdateLearnerProfilePayload = {
   bio: string;
   learning_goals: string;
   preferred_language: string;
 };
+
+/** @deprecated Use LearnerProfile. Kept as an alias for older imports. */
+export type StudentProfile = LearnerProfile;
+
+/** @deprecated Use UpdateLearnerProfilePayload. Kept as an alias for older imports. */
+export type UpdateStudentProfilePayload = UpdateLearnerProfilePayload;
 
 export type LearnerMetric = {
   id: string;

@@ -1,22 +1,18 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   FiArrowRight,
-  FiAlertCircle,
   FiBookOpen,
   FiCalendar,
   FiCheckCircle,
   FiClock,
   FiEdit3,
-  FiEye,
-  FiEyeOff,
-  FiKey,
   FiRefreshCw,
   FiTrash2,
-  FiUser,
 } from "react-icons/fi";
 import { useCurrentUser } from "../../features/auth/authQueries";
+import { AccountSettingsPage } from "../../components/settings/AccountSettingsPage";
 import {
   useCreateTutorService,
   useDeleteTutorService,
@@ -553,259 +549,12 @@ export const TutorFiles = () => (
   </section>
 );
 
-export const TutorAccount = () => {
-  const userQuery = useCurrentUser();
-  const user = userQuery.data;
-  const [infoDraft, setInfoDraft] = useState<{ fullName?: string; email?: string }>({});
-  const [infoErrors, setInfoErrors] = useState<Record<string, string>>({});
-  const [infoSubmitPending, setInfoSubmitPending] = useState(false);
-  const [infoSubmitNotice, setInfoSubmitNotice] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showCurrent, setShowCurrent] = useState(false);
-  const [showNew, setShowNew] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
-  const [passwordSubmitPending, setPasswordSubmitPending] = useState(false);
-  const [passwordSubmitNotice, setPasswordSubmitNotice] = useState("");
+export const TutorAccount = () => (
+  <AccountSettingsPage
+    eyebrow="Tutor Preferences"
+    title="Tutor Settings"
+    description="Manage your tutor profile, teaching credentials, and account security."
+    roleBadgeLabel="Educator & Tutor"
+  />
+);
 
-  const fullName = infoDraft.fullName ?? user?.full_name ?? "";
-  const email = infoDraft.email ?? user?.email ?? "";
-
-  const resetInfoForm = () => {
-    setInfoDraft({});
-    setInfoErrors({});
-    setInfoSubmitNotice("");
-  };
-
-  const resetPasswordForm = () => {
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    setPasswordErrors({});
-    setPasswordSubmitNotice("");
-  };
-
-  const handleSaveInfo = (event: FormEvent) => {
-    event.preventDefault();
-    if (infoSubmitPending) return;
-
-    const errors: Record<string, string> = {};
-    if (!fullName.trim()) errors.fullName = "Full name is required";
-    else if (fullName.trim().length < 2) errors.fullName = "Full name must contain at least 2 characters";
-
-    if (!email.trim()) errors.email = "Email is required";
-    else if (!EMAIL_REGEX.test(email.trim())) errors.email = "Please enter a valid email address";
-
-    if (Object.keys(errors).length) {
-      setInfoErrors(errors);
-      setInfoSubmitNotice("");
-      return;
-    }
-
-    setInfoErrors({});
-    setInfoSubmitNotice("");
-    setInfoSubmitPending(true);
-    window.setTimeout(() => {
-      setInfoSubmitPending(false);
-      setInfoSubmitNotice("Profile editing is not available yet because the backend update API has not been implemented.");
-    }, 800);
-  };
-
-  const handleUpdatePassword = (event: FormEvent) => {
-    event.preventDefault();
-    if (passwordSubmitPending) return;
-
-    const errors: Record<string, string> = {};
-    if (!currentPassword) errors.currentPassword = "Current password is required";
-    if (!newPassword) {
-      errors.newPassword = "New password is required";
-    } else {
-      const rules = [
-        [newPassword.length < 8, "New password must contain at least 8 characters"],
-        [!/[A-Z]/.test(newPassword), "Must contain at least one uppercase letter"],
-        [!/[a-z]/.test(newPassword), "Must contain at least one lowercase letter"],
-        [!/[0-9]/.test(newPassword), "Must contain at least one number"],
-      ] as const;
-      errors.newPassword = rules.filter(([failed]) => failed).map(([, message]) => message).join(". ");
-      if (!errors.newPassword) delete errors.newPassword;
-    }
-    if (!confirmPassword) errors.confirmPassword = "Confirm password is required";
-    else if (confirmPassword !== newPassword) errors.confirmPassword = "Passwords do not match";
-    if (newPassword && currentPassword && newPassword === currentPassword) {
-      errors.newPassword = "The new password must not be the same as the current password";
-    }
-
-    if (Object.keys(errors).length) {
-      setPasswordErrors(errors);
-      setPasswordSubmitNotice("");
-      return;
-    }
-
-    setPasswordErrors({});
-    setPasswordSubmitNotice("");
-    setPasswordSubmitPending(true);
-    window.setTimeout(() => {
-      setPasswordSubmitPending(false);
-      setPasswordSubmitNotice("Password updates are not available yet because the backend change-password API has not been implemented.");
-    }, 800);
-  };
-
-  return (
-    <section className="space-y-6">
-      <AdminSectionHeader
-        eyebrow="Account settings"
-        title="Tutor Settings"
-        description="Manage your tutor profile and account security."
-      />
-
-      {userQuery.isLoading ? (
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="h-96 animate-pulse rounded-3xl bg-slate-100" />
-          <div className="h-96 animate-pulse rounded-3xl bg-slate-100" />
-        </div>
-      ) : userQuery.isError ? (
-        <ErrorState title="Could not load settings data" message={getErrorMessage(userQuery.error)} onRetry={() => userQuery.refetch()} />
-      ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <article className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
-            <form onSubmit={handleSaveInfo} className="flex flex-1 flex-col justify-between space-y-6">
-              <div>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-haiti-red">Personal info</span>
-                    <h2 className="mt-1 text-lg font-extrabold text-slate-900">Personal Information</h2>
-                    <p className="mt-1.5 text-xs font-semibold text-slate-400">Update your display name and registered email address.</p>
-                  </div>
-                  <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-blue-50 text-haiti-navy">
-                    <FiUser className="size-5" />
-                  </span>
-                </div>
-
-                <div className="mt-6 space-y-4">
-                  <label className="block">
-                    <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">Full Name</span>
-                    <input
-                      type="text"
-                      value={fullName}
-                      onChange={(event) => {
-                        setInfoDraft((current) => ({ ...current, fullName: event.target.value }));
-                        if (infoErrors.fullName) {
-                          setInfoErrors((current) => {
-                            const copy = { ...current };
-                            delete copy.fullName;
-                            return copy;
-                          });
-                        }
-                      }}
-                      className={`h-11 w-full rounded-xl border px-4 text-sm font-semibold text-slate-700 outline-none transition ${infoErrors.fullName ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-50" : "border-slate-200 bg-slate-50/50 hover:border-slate-300 focus:border-haiti-navy focus:bg-white"}`}
-                      placeholder="Enter your full name"
-                    />
-                    {infoErrors.fullName ? <p className="mt-1.5 flex items-center gap-1 text-xs font-bold text-red-500"><FiAlertCircle />{infoErrors.fullName}</p> : null}
-                  </label>
-
-                  <label className="block">
-                    <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">Email Address</span>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(event) => {
-                        setInfoDraft((current) => ({ ...current, email: event.target.value }));
-                        if (infoErrors.email) {
-                          setInfoErrors((current) => {
-                            const copy = { ...current };
-                            delete copy.email;
-                            return copy;
-                          });
-                        }
-                      }}
-                      className={`h-11 w-full rounded-xl border px-4 text-sm font-semibold text-slate-700 outline-none transition ${infoErrors.email ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-50" : "border-slate-200 bg-slate-50/50 hover:border-slate-300 focus:border-haiti-navy focus:bg-white"}`}
-                      placeholder="Enter your email"
-                    />
-                    {infoErrors.email ? <p className="mt-1.5 flex items-center gap-1 text-xs font-bold text-red-500"><FiAlertCircle />{infoErrors.email}</p> : null}
-                  </label>
-                </div>
-              </div>
-
-              <div className="mt-6 border-t border-slate-100 pt-5">
-                {infoSubmitNotice ? <div className="mb-4 flex gap-2.5 rounded-xl border border-blue-100 bg-blue-50/40 p-4 text-xs font-semibold text-haiti-navy"><FiAlertCircle className="size-4 shrink-0 text-blue-600" /><span>{infoSubmitNotice}</span></div> : null}
-                <div className="flex flex-wrap gap-3">
-                  <button type="submit" disabled={infoSubmitPending} className="inline-flex min-h-11 min-w-[7.5rem] items-center justify-center rounded-xl bg-haiti-navy px-5 text-sm font-bold text-white shadow-xs transition hover:bg-slate-800 disabled:pointer-events-none disabled:opacity-50">
-                    {infoSubmitPending ? <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : "Save Changes"}
-                  </button>
-                  <button type="button" onClick={resetInfoForm} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 shadow-xs transition hover:border-slate-300 hover:bg-slate-50">
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </form>
-          </article>
-
-          <article className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
-            <form onSubmit={handleUpdatePassword} className="flex flex-1 flex-col justify-between space-y-6">
-              <div>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-haiti-red">Security</span>
-                    <h2 className="mt-1 text-lg font-extrabold text-slate-900">Password and Security</h2>
-                    <p className="mt-1.5 text-xs font-semibold text-slate-400">Change your password to keep your tutor account safe.</p>
-                  </div>
-                  <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-purple-50 text-purple-600">
-                    <FiKey className="size-5" />
-                  </span>
-                </div>
-
-                <div className="mt-6 space-y-4">
-                  {[
-                    ["Current Password", currentPassword, setCurrentPassword, showCurrent, setShowCurrent, "currentPassword"],
-                    ["New Password", newPassword, setNewPassword, showNew, setShowNew, "newPassword"],
-                    ["Confirm New Password", confirmPassword, setConfirmPassword, showConfirm, setShowConfirm, "confirmPassword"],
-                  ].map(([label, value, setValue, shown, setShown, key]) => (
-                    <label key={String(key)} className="block">
-                      <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">{String(label)}</span>
-                      <div className="relative">
-                        <input
-                          type={shown ? "text" : "password"}
-                          value={String(value)}
-                          onChange={(event) => {
-                            (setValue as (value: string) => void)(event.target.value);
-                            if (passwordErrors[String(key)]) {
-                              setPasswordErrors((current) => {
-                                const copy = { ...current };
-                                delete copy[String(key)];
-                                return copy;
-                              });
-                            }
-                          }}
-                          className={`h-11 w-full rounded-xl border pl-4 pr-11 text-sm font-semibold text-slate-700 outline-none transition ${passwordErrors[String(key)] ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-50" : "border-slate-200 bg-slate-50/50 hover:border-slate-300 focus:border-haiti-navy focus:bg-white"}`}
-                          placeholder="Password"
-                        />
-                        <button type="button" onClick={() => (setShown as (value: boolean) => void)(!shown)} className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600" aria-label={`${shown ? "Hide" : "Show"} ${String(label).toLowerCase()}`}>
-                          {shown ? <FiEyeOff className="size-4" /> : <FiEye className="size-4" />}
-                        </button>
-                      </div>
-                      {passwordErrors[String(key)] ? <p className="mt-1.5 flex items-start gap-1 text-xs font-bold leading-snug text-red-500"><FiAlertCircle className="mt-0.5 shrink-0" /><span>{passwordErrors[String(key)]}</span></p> : null}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-6 border-t border-slate-100 pt-5">
-                {passwordSubmitNotice ? <div className="mb-4 flex gap-2.5 rounded-xl border border-blue-100 bg-blue-50/40 p-4 text-xs font-semibold text-haiti-navy"><FiAlertCircle className="size-4 shrink-0 text-blue-600" /><span>{passwordSubmitNotice}</span></div> : null}
-                <div className="flex flex-wrap gap-3">
-                  <button type="submit" disabled={passwordSubmitPending} className="inline-flex min-h-11 min-w-[8.5rem] items-center justify-center rounded-xl bg-haiti-navy px-5 text-sm font-bold text-white shadow-xs transition hover:bg-slate-800 disabled:pointer-events-none disabled:opacity-50">
-                    {passwordSubmitPending ? <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : "Update Password"}
-                  </button>
-                  <button type="button" onClick={resetPasswordForm} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 shadow-xs transition hover:border-slate-300 hover:bg-slate-50">
-                    Reset Form
-                  </button>
-                </div>
-              </div>
-            </form>
-          </article>
-        </div>
-      )}
-    </section>
-  );
-};
