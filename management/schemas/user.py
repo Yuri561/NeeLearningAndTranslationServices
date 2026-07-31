@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional
 from enums.enums import UserRole
 
-# schema for user registration
+# schema for user registration — role is always set to learner by the backend
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
@@ -37,3 +37,11 @@ class UserResponse(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+# schema used when a learner requests to become a tutor
+class BecomeTeacherRequest(BaseModel):
+    bio: Optional[str] = None
+    specialization: Optional[str] = None
+    years_of_experience: Optional[int] = None
+    hourly_rate: Optional[float] = None

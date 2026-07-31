@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { FiAlertCircle, FiChevronLeft, FiChevronRight, FiRefreshCw } from "react-icons/fi";
 import type { IconType } from "react-icons";
 import { formatNumber } from "./adminFormat";
@@ -29,6 +29,35 @@ export const PageHeader = ({
       </p>
     </div>
     {actions ? <div className="shrink-0">{actions}</div> : null}
+  </div>
+);
+
+export const AdminSectionHeader = ({
+  title,
+  description,
+  eyebrow,
+  actions,
+}: {
+  title: string;
+  description: string;
+  eyebrow: string;
+  actions?: ReactNode;
+}) => (
+  <div className="overflow-hidden rounded-3xl bg-haiti-navy px-5 py-7 text-white shadow-sm sm:px-8 sm:py-9">
+    <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+      <div className="min-w-0">
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-200">
+          {eyebrow}
+        </p>
+        <h1 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">
+          {title}
+        </h1>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100">
+          {description}
+        </p>
+      </div>
+      {actions ? <div className="shrink-0">{actions}</div> : null}
+    </div>
   </div>
 );
 
@@ -222,19 +251,19 @@ export const DataTable = <T,>({
   if (!items.length) return <>{empty}</>;
 
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.06)]">
       <div className="overflow-x-auto">
-        <table className="min-w-[52rem] w-full text-left">
-          <thead className="bg-slate-50 text-[0.68rem] font-extrabold uppercase tracking-[0.12em] text-slate-400">
+        <table className="w-full min-w-[52rem] border-separate border-spacing-0 text-left">
+          <thead className="bg-haiti-navy text-[0.7rem] font-extrabold uppercase tracking-[0.12em] text-white">
             <tr>
               {columns.map((column) => (
-                <th key={column.key} className={`px-4 py-3 ${column.className ?? ""}`}>
+                <th key={column.key} className={`px-5 py-4 align-middle ${column.className ?? ""}`}>
                   {column.header}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
             {items.map((item) => (
               <tr
                 key={getKey(item)}
@@ -246,10 +275,17 @@ export const DataTable = <T,>({
                     onRowClick(item);
                   }
                 }}
-                className={onRowClick ? "cursor-pointer transition hover:bg-blue-50/40" : ""}
+                className={`transition-colors hover:bg-blue-50/60 ${
+                  onRowClick
+                    ? "cursor-pointer focus-visible:bg-blue-50 focus-visible:outline-none"
+                    : ""
+                }`}
               >
                 {columns.map((column) => (
-                  <td key={column.key} className={`px-4 py-4 text-sm ${column.className ?? ""}`}>
+                  <td
+                    key={column.key}
+                    className={`px-5 py-4 align-middle text-sm font-medium leading-6 ${column.className ?? ""}`}
+                  >
                     {column.render(item)}
                   </td>
                 ))}
@@ -312,39 +348,60 @@ export const DetailsDrawer = ({
   description?: string;
   children: ReactNode;
   onClose: () => void;
-}) => (
-  <>
-    <button
-      type="button"
-      aria-label="Close details drawer"
-      onClick={onClose}
-      className={`fixed inset-0 z-40 bg-slate-950/30 transition-opacity ${
-        open ? "visible opacity-100" : "invisible opacity-0"
-      }`}
-    />
-    <aside
-      aria-label={title}
-      className={`fixed inset-y-0 right-0 z-50 w-full max-w-xl overflow-y-auto bg-white p-5 shadow-2xl transition-transform duration-300 sm:p-6 ${
-        open ? "translate-x-0" : "translate-x-full"
-      }`}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h2 className="text-lg font-extrabold text-slate-950">{title}</h2>
-          {description ? (
-            <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
-          ) : null}
+}) => {
+  useEffect(() => {
+    if (!open || typeof window === "undefined") return;
+
+    const { body, documentElement } = document;
+    const previousOverflow = body.style.overflow;
+    const previousPaddingRight = body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - documentElement.clientWidth;
+
+    body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) {
+      body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
+    return () => {
+      body.style.overflow = previousOverflow;
+      body.style.paddingRight = previousPaddingRight;
+    };
+  }, [open]);
+
+  return (
+    <>
+      <button
+        type="button"
+        aria-label="Close details drawer"
+        onClick={onClose}
+        className={`fixed inset-x-0 top-0 z-40 h-[100dvh] bg-slate-950/30 transition-opacity ${
+          open ? "visible opacity-100" : "invisible opacity-0"
+        }`}
+      />
+      <aside
+        aria-label={title}
+        className={`fixed right-0 top-0 z-50 h-[100dvh] max-h-[100dvh] w-full max-w-xl overflow-y-auto overscroll-contain bg-white p-5 shadow-2xl transition-transform duration-300 sm:p-6 ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className="text-lg font-extrabold text-slate-950">{title}</h2>
+            {description ? (
+              <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid size-10 shrink-0 place-items-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-haiti-navy"
+          >
+            <span className="sr-only">Close</span>
+            x
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="grid size-10 shrink-0 place-items-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-haiti-navy"
-        >
-          <span className="sr-only">Close</span>
-          x
-        </button>
-      </div>
-      <div className="mt-6">{children}</div>
-    </aside>
-  </>
-);
+        <div className="mt-6">{children}</div>
+      </aside>
+    </>
+  );
+};

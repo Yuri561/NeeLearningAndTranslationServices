@@ -1,14 +1,12 @@
 #store metadata for the file only
 
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
 from database.database import engine
 from datetime import datetime
 from sqlalchemy import func, ForeignKey
+from database.base import Base
 
 
-
-class Base(DeclarativeBase):
-    pass
 
 class FileUpload(Base):
     __tablename__ = "files"

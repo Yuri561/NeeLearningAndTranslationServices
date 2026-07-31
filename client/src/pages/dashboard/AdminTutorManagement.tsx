@@ -28,13 +28,13 @@ import type {
   TutorWithServices,
 } from "../../features/admin/tutorManagementTypes";
 import {
+  AdminSectionHeader,
   DataTable,
   DetailsDrawer,
   EmptyState,
   ErrorState,
   FilterBar,
   LoadingSkeleton,
-  PageHeader,
   SearchInput,
   SelectFilter,
   StatCard,
@@ -416,6 +416,57 @@ const TutorServicesList = ({ services }: { services: TutorService[] }) => (
   </div>
 );
 
+const AddTutorModal = ({
+  open,
+  onClose,
+  onCreated,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onCreated: (tutor: RegisteredTutor) => void;
+}) => {
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] grid place-items-center p-4 sm:p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="add-tutor-modal-title"
+    >
+      <button
+        type="button"
+        aria-label="Close add tutor form"
+        onClick={onClose}
+        className="absolute inset-0 bg-slate-950/45 backdrop-blur-[2px]"
+      />
+      <div className="relative w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:px-6">
+          <div>
+            <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-haiti-red">
+              Tutor management
+            </p>
+            <h2 id="add-tutor-modal-title" className="mt-1 text-lg font-extrabold text-slate-950">
+              Add Tutor
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid size-10 shrink-0 place-items-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-haiti-navy"
+          >
+            <span className="sr-only">Close add tutor form</span>
+            <FiX className="size-4" />
+          </button>
+        </div>
+        <div className="max-h-[calc(100vh-10rem)] overflow-y-auto p-4 sm:p-6">
+          <CreateTutorForm onCreated={onCreated} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const AdminTutorManagement = () => {
   const tutorsQuery = useTutorsWithServices();
   const [selectedTutor, setSelectedTutor] = useState<TutorWithServices | null>(null);
@@ -425,6 +476,7 @@ export const AdminTutorManagement = () => {
   const [verification, setVerification] = useState("");
   const [activeServices, setActiveServices] = useState("");
   const [createdTutor, setCreatedTutor] = useState<RegisteredTutor | null>(null);
+  const [isAddTutorOpen, setIsAddTutorOpen] = useState(false);
 
   const tutors = useMemo(() => tutorsQuery.data ?? [], [tutorsQuery.data]);
   const allServices = tutors.flatMap((tutor) => tutor.services);
@@ -551,19 +603,28 @@ export const AdminTutorManagement = () => {
       {createdTutor ? (
         <SuccessToast tutor={createdTutor} onClose={() => setCreatedTutor(null)} />
       ) : null}
+      <AddTutorModal
+        open={isAddTutorOpen}
+        onClose={() => setIsAddTutorOpen(false)}
+        onCreated={(tutor) => {
+          setCreatedTutor(tutor);
+          setIsAddTutorOpen(false);
+        }}
+      />
 
-      <PageHeader
+      <AdminSectionHeader
         eyebrow="Administration"
         title="Tutor Management"
         description="Create tutor accounts and review tutors through the services they have published."
         actions={
-          <a
-            href="#add-tutor"
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-haiti-navy px-4 text-sm font-extrabold text-white transition hover:bg-haiti-navy-dark"
+          <button
+            type="button"
+            onClick={() => setIsAddTutorOpen(true)}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-white px-4 text-sm font-extrabold text-haiti-navy shadow-sm transition hover:bg-blue-50"
           >
             <FiUserPlus className="size-4" />
             Add Tutor
-          </a>
+          </button>
         }
       />
 
@@ -585,108 +646,102 @@ export const AdminTutorManagement = () => {
         )}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.45fr_.85fr]">
-        <section className="space-y-4">
-          <div>
-            <h2 className="text-base font-extrabold text-slate-950">Existing Tutors</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Showing {filteredTutors.length} of {tutors.length} tutors with services.
-            </p>
-          </div>
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-base font-extrabold text-slate-950">Existing Tutors</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Showing {filteredTutors.length} of {tutors.length} tutors with services.
+          </p>
+        </div>
 
-          <FilterBar>
-            <div className="flex min-w-0 flex-1 items-center gap-2">
-              <FiSearch className="hidden size-4 shrink-0 text-slate-400 sm:block" />
-              <SearchInput
-                value={search}
-                onChange={setSearch}
-                placeholder="Search by name or email"
-                label="Search tutors"
+        <FilterBar>
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <FiSearch className="hidden size-4 shrink-0 text-slate-400 sm:block" />
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder="Search by name or email"
+              label="Search tutors"
+            />
+          </div>
+          <SelectFilter
+            label="All specializations"
+            value={specialization}
+            onChange={setSpecialization}
+            options={specializationOptions}
+          />
+          <SelectFilter
+            label="All languages"
+            value={language}
+            onChange={setLanguage}
+            options={languageOptions}
+          />
+          <SelectFilter
+            label="All verification"
+            value={verification}
+            onChange={setVerification}
+            options={["verified", "unverified"]}
+          />
+          <SelectFilter
+            label="All services"
+            value={activeServices}
+            onChange={setActiveServices}
+            options={["has-active", "no-active"]}
+          />
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm font-extrabold text-slate-600 transition hover:bg-slate-50"
+          >
+            Clear
+          </button>
+        </FilterBar>
+
+        {tutorsQuery.isLoading ? <LoadingSkeleton rows={6} /> : null}
+        {tutorsQuery.isError ? (
+          <ErrorState
+            title="Could not load tutors"
+            message={getErrorMessage(tutorsQuery.error)}
+            onRetry={() => tutorsQuery.refetch()}
+          />
+        ) : null}
+        {!tutorsQuery.isLoading && !tutorsQuery.isError && filteredTutors.length === 0 ? (
+          <EmptyState
+            title={
+              tutors.length
+                ? "No tutors match the current filters."
+                : "No tutors with services were found."
+            }
+            description={
+              tutors.length
+                ? "Clear the filters or try a different search term."
+                : "Tutors will appear here after creating at least one service."
+            }
+          />
+        ) : null}
+        {!tutorsQuery.isLoading && !tutorsQuery.isError && filteredTutors.length > 0 ? (
+          <>
+            <div className="hidden md:block">
+              <DataTable
+                items={filteredTutors}
+                columns={columns}
+                getKey={(tutor) => tutor.tutorId}
+                onRowClick={setSelectedTutor}
+                empty={null}
               />
             </div>
-            <SelectFilter
-              label="All specializations"
-              value={specialization}
-              onChange={setSpecialization}
-              options={specializationOptions}
-            />
-            <SelectFilter
-              label="All languages"
-              value={language}
-              onChange={setLanguage}
-              options={languageOptions}
-            />
-            <SelectFilter
-              label="All verification"
-              value={verification}
-              onChange={setVerification}
-              options={["verified", "unverified"]}
-            />
-            <SelectFilter
-              label="All services"
-              value={activeServices}
-              onChange={setActiveServices}
-              options={["has-active", "no-active"]}
-            />
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm font-extrabold text-slate-600 transition hover:bg-slate-50"
-            >
-              Clear
-            </button>
-          </FilterBar>
-
-          {tutorsQuery.isLoading ? <LoadingSkeleton rows={6} /> : null}
-          {tutorsQuery.isError ? (
-            <ErrorState
-              title="Could not load tutors"
-              message={getErrorMessage(tutorsQuery.error)}
-              onRetry={() => tutorsQuery.refetch()}
-            />
-          ) : null}
-          {!tutorsQuery.isLoading && !tutorsQuery.isError && filteredTutors.length === 0 ? (
-            <EmptyState
-              title={
-                tutors.length
-                  ? "No tutors match the current filters."
-                  : "No tutors with services were found."
-              }
-              description={
-                tutors.length
-                  ? "Clear the filters or try a different search term."
-                  : "Tutors will appear here after creating at least one service."
-              }
-            />
-          ) : null}
-          {!tutorsQuery.isLoading && !tutorsQuery.isError && filteredTutors.length > 0 ? (
-            <>
-              <div className="hidden md:block">
-                <DataTable
-                  items={filteredTutors}
-                  columns={columns}
-                  getKey={(tutor) => tutor.tutorId}
-                  onRowClick={setSelectedTutor}
-                  empty={null}
+            <div className="grid gap-4 md:hidden">
+              {filteredTutors.map((tutor) => (
+                <TutorCard
+                  key={tutor.tutorId}
+                  tutor={tutor}
+                  onDetails={setSelectedTutor}
                 />
-              </div>
-              <div className="grid gap-4 md:hidden">
-                {filteredTutors.map((tutor) => (
-                  <TutorCard
-                    key={tutor.tutorId}
-                    tutor={tutor}
-                    onDetails={setSelectedTutor}
-                  />
-                ))}
-              </div>
-            </>
-          ) : null}
-        </section>
-
-        <section id="add-tutor">
-          <CreateTutorForm onCreated={setCreatedTutor} />
-        </section>
-      </div>
+              ))}
+            </div>
+          </>
+        ) : null}
+      </section>
 
       <DetailsDrawer
         open={Boolean(selectedTutor)}

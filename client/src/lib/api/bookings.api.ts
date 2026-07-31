@@ -11,7 +11,7 @@ export const bookingsApi = {
 
   getById: async (bookingId: number | string) => {
     const response = await apiRequest<unknown>(
-      `${API_BASE_PATH}/bookings/${encodeURIComponent(String(bookingId))}/`,
+      `${API_BASE_PATH}/bookings/${encodeURIComponent(String(bookingId))}`,
       {},
       true
     );

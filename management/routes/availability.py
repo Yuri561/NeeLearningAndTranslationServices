@@ -59,7 +59,7 @@ def create_availability(availability: list[AvailabilityCreate], current_user: Us
     
     for avail in availability:
         new_avail = Availability(
-            teacher_id = current_user.id,
+            tutor_id = current_user.id,
             start_time = avail.start_time,
             end_time = avail.end_time,
             day = avail.day,
@@ -81,9 +81,9 @@ def create_availability(availability: list[AvailabilityCreate], current_user: Us
 # Used by students during booking and by teachers managing their schedule.
 # ============================================================================
 
-@router.get("/teacher/{teacher_id}", response_model=list[AvailabilityResponse])
-def get_teacher_avail(teacher_id:int, db:Session = Depends(get_db)):
-    teacher_avail = select(Availability).where(Availability.teacher_id == teacher_id)
+@router.get("/teacher/{tutor_id}", response_model=list[AvailabilityResponse])
+def get_teacher_avail(tutor_id:int, db:Session = Depends(get_db)):
+    teacher_avail = select(Availability).where(Availability.tutor_id == tutor_id)
     results = db.scalars(teacher_avail).all()
     return results
 
@@ -107,7 +107,7 @@ def update_availabilty(availability_id:int, updated_availability:AvailabilityCre
     avail_service = db.get(Availability, availability_id)
     if not avail_service:
         raise HTTPException(status_code= 404, detail="unable to find availability id please try again")
-    if current_user.role != "admin" and avail_service.teacher_id != current_user.id:
+    if current_user.role != "admin" and avail_service.tutor_id != current_user.id:
         raise HTTPException(status_code=403, detail="You can only update your own availability.")
     avail_dict = updated_availability.model_dump()
     for key, value in avail_dict.items():
@@ -132,7 +132,7 @@ def delete_availability(availability_id:int, current_user: User = Depends(get_cu
     search_avail = db.get(Availability, availability_id)
     if not search_avail:
         raise HTTPException(status_code= 404, detail="unable to delete availability id please try again")
-    if current_user.role != "admin" and search_avail.teacher_id != current_user.id:
+    if current_user.role != "admin" and search_avail.tutor_id != current_user.id:
         raise HTTPException(status_code=403, detail="You can only delete your own availability.")
     db.delete(search_avail)
     db.commit()

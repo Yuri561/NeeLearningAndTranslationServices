@@ -11,7 +11,7 @@ export const availabilityApi = {
 
   getById: async (availabilityId: number | string) => {
     const response = await apiRequest<unknown>(
-      `${API_BASE_PATH}/availability/${encodeURIComponent(String(availabilityId))}/`,
+      `${API_BASE_PATH}/availability/${encodeURIComponent(String(availabilityId))}`,
       {},
       true
     );

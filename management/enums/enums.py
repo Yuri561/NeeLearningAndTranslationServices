@@ -37,3 +37,8 @@ class UserRole(str, Enum):
     ADMIN = "admin"
     TUTOR = "tutor"
     LEARNER = "learner"
+
+class LessonStatus(str, Enum):
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+    NO_SHOW = "no_show"

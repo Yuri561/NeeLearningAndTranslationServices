@@ -11,7 +11,7 @@ export const servicesApi = {
 
   getById: async (serviceId: number | string) => {
     const response = await apiRequest<unknown>(
-      `${API_BASE_PATH}/services/${encodeURIComponent(String(serviceId))}/`,
+      `${API_BASE_PATH}/services/${encodeURIComponent(String(serviceId))}`,
       {},
       true
     );

@@ -1,11 +1,10 @@
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import  Mapped, mapped_column
 from sqlalchemy import String, ForeignKey
 from database.database import engine
 from datetime import time, date
+from database.base import Base
 
 #setting up the models
-class Base(DeclarativeBase):
-    pass
 
 #creating the Booking table
 class Booking(Base):
@@ -14,8 +13,8 @@ class Booking(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     service_id: Mapped[int] = mapped_column()
     availability_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    student_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    teacher_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    learner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    tutor_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     status: Mapped[str] = mapped_column(String(50))
     notes: Mapped[str | None] = mapped_column(String(250), nullable=True)
     start_time: Mapped[time] = mapped_column()

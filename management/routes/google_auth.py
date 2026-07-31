@@ -1,4 +1,16 @@
-# routes for Google OAuth authentication - login URL and callback
+#######################################################################
+#                                                                     #
+#                    GOOGLE OAUTH AUTHENTICATION                      #
+#                                                                     #
+#        OAuth 2.0 authorization code flow.                          #
+#        New Google users are created as learners and get a          #
+#        student profile row automatically.                          #
+#                                                                     #
+#        - GET /google/login    → return Google consent URL          #
+#        - GET /google/callback → exchange code, return JWT          #
+#                                                                     #
+#######################################################################
+
 
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
@@ -6,7 +18,8 @@ from sqlalchemy import select
 
 from database.database import get_db
 from models.user import User
-from schemas.user import UserResponse, Token
+from models.learner_profile import StudentProfile
+from schemas.user import Token
 from auth.google import get_google_auth_url, exchange_code_for_tokens, get_google_user_info
 from auth.token import create_access_token
 from enums.enums import UserRole
@@ -60,19 +73,23 @@ def google_callback(code: str, db: Session = Depends(get_db)):
 
     # step 3: find or create the user in our database
     query = select(User).where(User.email == email)
-    result = db.execute(query)
-    user = result.scalars().first()
+    user = db.execute(query).scalars().first()
 
     if user is None:
-        # create a new user from Google — no password needed
+        # new Google user — always starts as a learner
         user = User(
             email=email,
             hashed_password=None,
             full_name=full_name,
             auth_provider="google",
-            role=UserRole, #from enums YP
+            role=UserRole.LEARNER,
         )
         db.add(user)
+        db.flush()  # get user.id before committing
+
+        # automatically create a blank student profile for the new user
+        student_profile = StudentProfile(user_id=user.id)
+        db.add(student_profile)
         db.commit()
         db.refresh(user)
 
@@ -83,6 +100,6 @@ def google_callback(code: str, db: Session = Depends(get_db)):
             detail="User account is deactivated",
         )
 
-    # step 4: issue our own JWT token (same as the regular login)
+    # step 4: issue our own JWT token (same as regular login)
     jwt_token = create_access_token(data={"user_id": user.id, "email": user.email})
     return {"access_token": jwt_token, "token_type": "bearer"}

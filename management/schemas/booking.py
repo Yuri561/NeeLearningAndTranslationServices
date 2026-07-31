@@ -7,9 +7,9 @@ from typing import Optional
 
 
 class BookingCreate(BaseModel):
-    student_id : int
+    learner_id : int
     service_id : int
-    teacher_id : int
+    tutor_id : int
     availability_id : int
     booking_date : date
     start_time : time

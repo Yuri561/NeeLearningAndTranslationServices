@@ -2,7 +2,7 @@ from typing import Optional
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, Boolean, DateTime, text
 from datetime import datetime, timezone
-from models.service import Base
+from database.base import Base
 from database.database import engine
 from enums.enums import UserRole
 

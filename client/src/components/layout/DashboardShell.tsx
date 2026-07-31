@@ -10,7 +10,6 @@ import {
   FiLogOut,
   FiMenu,
   FiSettings,
-  FiShield,
   FiUser,
   FiUsers,
   FiX,
@@ -100,8 +99,13 @@ export const DashboardSidebar = ({
             className="inline-flex min-w-0 items-center gap-3"
             aria-label="Nee Learning admin overview"
           >
-            <span className="grid size-11 shrink-0 place-items-center rounded-lg bg-blue-50 text-haiti-navy">
-              <FiShield className="size-5" aria-hidden="true" />
+            <span className="grid size-11 shrink-0 place-items-center rounded-lg bg-blue-50">
+              <img
+                src="/admin-related-pictures/personal-security.png"
+                alt=""
+                className="size-6 object-contain"
+                aria-hidden="true"
+              />
             </span>
             {!collapsed ? (
               <span className="min-w-0">

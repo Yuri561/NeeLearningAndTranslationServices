@@ -28,3 +28,12 @@ export type RegisterInput = LoginInput & {
 export type GoogleAuthorization = {
   authorization_url: string;
 };
+
+export type ChangePasswordInput = {
+  current_password: string;
+  new_password: string;
+};
+
+export type ChangePasswordResult = {
+  message: string;
+};

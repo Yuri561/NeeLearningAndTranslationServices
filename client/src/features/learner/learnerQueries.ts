@@ -1,7 +1,7 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "../../lib/apiClient";
 import { learnerApi } from "./learnerApi";
-import type { Booking, StudentProfile } from "./learnerTypes";
+import type { Booking, LearnerProfile } from "./learnerTypes";
 
 export const learnerKeys = {
   bookings: (learnerId: number) => ["learner", learnerId, "bookings"] as const,
@@ -18,7 +18,9 @@ export const learnerKeys = {
     ["learner", "translation", "request-files", translationRequestId] as const,
   learnerTranslationRequests: (learnerId: number) =>
     ["learner", "translation", "requests", learnerId] as const,
-  studentProfile: ["learner", "student-profile", "me"] as const,
+  profile: ["learner", "profile", "me"] as const,
+  profileByUserId: (userId: number) => ["learner", "profile", "user", userId] as const,
+  studentProfile: ["learner", "profile", "me"] as const,
 };
 
 export const useLearnerBookings = (learnerId?: number) =>
@@ -63,12 +65,12 @@ export const useLearningServices = () =>
     staleTime: 5 * 60_000,
   });
 
-export const useMyStudentProfile = () =>
+export const useMyLearnerProfile = () =>
   useQuery({
-    queryKey: learnerKeys.studentProfile,
+    queryKey: learnerKeys.profile,
     queryFn: async () => {
       try {
-        return await learnerApi.getMyStudentProfile();
+        return await learnerApi.getMyLearnerProfile();
       } catch (error) {
         if (error instanceof ApiError && error.status === 404) {
           return null;
@@ -85,11 +87,52 @@ export const useUpdateMyStudentProfile = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: learnerApi.updateMyStudentProfile,
+    mutationFn: learnerApi.updateMyLearnerProfile,
     onSuccess: (profile) => {
-      queryClient.setQueryData<StudentProfile>(learnerKeys.studentProfile, profile);
-      queryClient.invalidateQueries({ queryKey: learnerKeys.studentProfile });
+      queryClient.setQueryData<LearnerProfile>(learnerKeys.profile, profile);
+      queryClient.invalidateQueries({ queryKey: learnerKeys.profile });
     },
+  });
+};
+
+export const useMyStudentProfile = useMyLearnerProfile;
+
+export const useLearnerProfileByUserId = (userId?: number) =>
+  useQuery({
+    queryKey: learnerKeys.profileByUserId(userId ?? 0),
+    queryFn: () => learnerApi.getLearnerProfileByUserId(userId!),
+    enabled: Number.isInteger(userId) && (userId ?? 0) > 0,
+    staleTime: 5 * 60_000,
+  });
+
+export const useUpdateMyLearnerProfile = useUpdateMyStudentProfile;
+
+const updateCachedProfile = (
+  queryClient: ReturnType<typeof useQueryClient>,
+  profile: LearnerProfile
+) => {
+  queryClient.setQueryData<LearnerProfile>(learnerKeys.profile, profile);
+  queryClient.setQueryData<LearnerProfile>(
+    learnerKeys.profileByUserId(profile.user_id),
+    profile
+  );
+};
+
+export const useUploadMyProfilePicture = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: learnerApi.uploadMyProfilePicture,
+    onSuccess: (profile) => updateCachedProfile(queryClient, profile),
+  });
+};
+
+export const useDeleteMyProfilePicture = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: learnerApi.deleteMyProfilePicture,
+    onSuccess: (profile) => updateCachedProfile(queryClient, profile),
   });
 };
 

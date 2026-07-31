@@ -37,7 +37,7 @@ def get_all_booking(db: Session = Depends(get_db)):
 @router.post("/", response_model=BookingResponse) #this is the return response 
 def create_booking(booking: BookingCreate, db:Session=Depends(get_db)): 
     new_booking = Booking(
-        student_id = booking.student_id,
+        learner_id = booking.learner_id,
         availability_id = booking.availability_id,
         booking_date = booking.booking_date,
         start_time = booking.start_time,
@@ -45,7 +45,7 @@ def create_booking(booking: BookingCreate, db:Session=Depends(get_db)):
         status = booking.status,
         notes = booking.notes,
         service_id = booking.service_id,
-        teacher_id = booking.teacher_id)
+        tutor_id = booking.tutor_id)
 
     db.add(new_booking) #adding it to our db
     db.commit() #committing our changes 
@@ -55,28 +55,28 @@ def create_booking(booking: BookingCreate, db:Session=Depends(get_db)):
 # ============================================================================
 # BOOKING DASHBOARD API
 # ----------------------------------------------------------------------------
-# booking endpoints used by the Student and Teacher dashboards.
+# booking endpoints used by the Learner and tutor dashboards.
 #
 # Purpose:
-# - Retrieve bookings for a specific student
-# - Retrieve bookings for a specific teacher
+# - Retrieve bookings for a specific Learner
+# - Retrieve bookings for a specific tutor
 # - Support dashboard views, schedules, and booking history
 #
 # Endpoints:
-# - GET /bookings/student/{student_id}
-# - GET /bookings/teacher/{teacher_id}
+# - GET /bookings/learner/{learner_id}
+# - GET /bookings/tutor/{tutor_id}
 # ============================================================================
 
-@router.get("/student/{student_id}", response_model=list[BookingResponse])
+@router.get("/learner/{learner_id}", response_model=list[BookingResponse])
 def get_student_bookings(student_id: int, db:Session = Depends(get_db)):
     booking_list = select(Booking).where(Booking.student_id == student_id)
     result = db.scalars(booking_list).all()
     return result
     
     
-@router.get("/teacher/{teacher_id}", response_model=list[BookingResponse])
-def get_teacher_bookings(teacher_id: int, db:Session = Depends(get_db)):
-    booking_list = select(Booking).where(Booking.teacher_id == teacher_id)
+@router.get("/tutor/{tutor_id}", response_model=list[BookingResponse])
+def get_tutor_bookings(tutor_id: int, db:Session = Depends(get_db)):
+    booking_list = select(Booking).where(Booking.tutor_id == tutor_id)
     result = db.scalars(booking_list).all()
     return result
     
@@ -85,11 +85,11 @@ def get_teacher_bookings(teacher_id: int, db:Session = Depends(get_db)):
 # ============================================================================
 # BOOKING DASHBOARD API
 # ----------------------------------------------------------------------------
-# User-facing booking endpoints used by student and teacher dashboards.
+# User-facing booking endpoints used by student and tutor dashboards.
 #
 # Features:
-# - View bookings for a specific student
-# - View bookings for a specific teacher
+# - View bookings for a specific learner
+# - View bookings for a specific tutor
 # - Support schedules, booking history, and dashboard views
 # ============================================================================
 

@@ -1,5 +1,5 @@
-import { useMemo, useState, type FormEvent } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
   Bar,
@@ -15,21 +15,18 @@ import {
 } from "recharts";
 import {
   FiCalendar,
-  FiAlertCircle,
+  FiArrowRight,
   FiClock,
   FiDownload,
-  FiEye,
-  FiEyeOff,
   FiExternalLink,
   FiFileText,
-  FiKey,
   FiLayers,
   FiRefreshCw,
   FiSearch,
   FiTrash2,
-  FiUser,
 } from "react-icons/fi";
 import { useCurrentUser } from "../../features/auth/authQueries";
+import { AccountSettingsPage } from "../../components/settings/AccountSettingsPage";
 import {
   useAdminService,
   useAdminServices,
@@ -61,13 +58,13 @@ import type {
   CountDatum,
 } from "../../types/adminApi";
 import {
+  AdminSectionHeader,
   DataTable,
   DetailsDrawer,
   EmptyState,
   ErrorState,
   FilterBar,
   LoadingSkeleton,
-  PageHeader,
   Pagination,
   PermissionDenied,
   SearchInput,
@@ -125,6 +122,40 @@ const formatDateTime = (value?: string) => {
     hour: "numeric",
     minute: "2-digit",
   }).format(date);
+};
+
+const formatTimeOnly = (value?: string) => {
+  if (!value) return "Not provided";
+  const trimmed = value.trim();
+  const simpleTime = trimmed.match(/^(\d{1,2}):(\d{2})/);
+
+  if (simpleTime) {
+    return `${simpleTime[1].padStart(2, "0")}:${simpleTime[2]}`;
+  }
+
+  const date = new Date(trimmed);
+  if (!Number.isNaN(date.getTime())) {
+    return new Intl.DateTimeFormat("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(date);
+  }
+
+  return trimmed;
+};
+
+const formatTimeRange = (start?: string, end?: string) => {
+  if (!start && !end) return "Time not provided";
+  return `${formatTimeOnly(start)} - ${formatTimeOnly(end)}`;
+};
+
+const formatBackendFieldValue = (key: string, value: unknown) => {
+  if (typeof value === "string" && key.toLowerCase().includes("time")) {
+    return formatTimeOnly(value);
+  }
+
+  return formatValue(value);
 };
 
 const formatBytes = (bytes?: number) => {
@@ -224,73 +255,433 @@ const DistributionChart = ({
   );
 };
 
+const money = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  maximumFractionDigits: 0,
+});
+
+const formatServicePrice = (value?: number) =>
+  typeof value === "number" && Number.isFinite(value) ? money.format(value) : "Not provided";
+
+const formatDuration = (minutes?: number) => {
+  if (!minutes || !Number.isFinite(minutes)) return "Not provided";
+  if (minutes < 60) return `${minutes} min`;
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return remainingMinutes ? `${hours} hr ${remainingMinutes} min` : `${hours} hr`;
+};
+
+const ServiceDetailItem = ({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string;
+  value: string | number;
+  icon: typeof FiLayers;
+}) => (
+  <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-4">
+    <div className="flex items-center gap-3">
+      <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-white text-haiti-navy shadow-xs">
+        <Icon className="size-4" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-[0.68rem] font-extrabold uppercase tracking-[0.12em] text-slate-400">
+          {label}
+        </p>
+        <p className="mt-1 truncate text-sm font-extrabold text-slate-900">{value}</p>
+      </div>
+    </div>
+  </div>
+);
+
+const ServiceDetailsPanel = ({ service }: { service: AdminService }) => {
+  const rawFields = Object.entries(service.raw).filter(([, value]) => {
+    if (value === undefined || value === null || value === "") return false;
+    return typeof value !== "object";
+  });
+
+  return (
+    <div className="space-y-5">
+      <section className="overflow-hidden rounded-2xl border border-blue-100 bg-blue-50/50">
+        <div className="bg-haiti-navy px-5 py-5 text-white">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+            <div className="min-w-0">
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-blue-100">
+                Service profile
+              </p>
+              <h3 className="mt-2 break-words text-xl font-extrabold text-white">
+                {formatValue(service.name)}
+              </h3>
+              <p className="mt-2 text-sm font-semibold text-blue-100">
+                Service #{formatValue(service.id)}
+              </p>
+            </div>
+            {service.isActive !== undefined ? <StatusBadge status={service.isActive} /> : null}
+          </div>
+        </div>
+
+        <div className="grid gap-3 p-4 sm:grid-cols-2">
+          <ServiceDetailItem label="Category" value={formatValue(service.category)} icon={FiLayers} />
+          <ServiceDetailItem label="Language" value={formatValue(service.language)} icon={FiFileText} />
+          <ServiceDetailItem label="Duration" value={formatDuration(service.durationMinutes)} icon={FiClock} />
+          <ServiceDetailItem label="Price" value={formatServicePrice(service.price)} icon={FiCalendar} />
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 className="text-sm font-extrabold text-slate-950">Description</h3>
+        <p className="mt-3 text-sm leading-6 text-slate-600">
+          {service.description?.trim() || "No service description has been provided yet."}
+        </p>
+      </section>
+
+      <section>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-[0.68rem] font-extrabold uppercase tracking-[0.12em] text-slate-400">
+            Created
+          </p>
+          <p className="mt-2 text-sm font-extrabold text-slate-900">
+            {formatDateTime(service.createdAt)}
+          </p>
+        </div>
+      </section>
+
+      {rawFields.length ? (
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-sm font-extrabold text-slate-950">Backend fields</h3>
+          <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+            {rawFields.map(([key, value]) => (
+              <div key={key} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <dt className="text-[0.65rem] font-extrabold uppercase tracking-[0.12em] text-slate-400">
+                  {key}
+                </dt>
+                <dd className="mt-1 break-words text-sm font-bold text-slate-800">
+                  {formatBackendFieldValue(key, value)}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ) : null}
+    </div>
+  );
+};
+
+const availabilityLabel = (availability: AdminAvailabilityRecord) =>
+  availability.day ?? availability.date ?? "Availability window";
+
+const AvailabilityDetailsPanel = ({
+  availability,
+}: {
+  availability: AdminAvailabilityRecord;
+}) => {
+  const rawFields = Object.entries(availability.raw).filter(([, value]) => {
+    if (value === undefined || value === null || value === "") return false;
+    return typeof value !== "object";
+  });
+
+  return (
+    <div className="space-y-5">
+      <section className="overflow-hidden rounded-2xl border border-blue-100 bg-blue-50/50">
+        <div className="bg-haiti-navy px-5 py-5 text-white">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+            <div className="min-w-0">
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-blue-100">
+                Availability profile
+              </p>
+              <h3 className="mt-2 break-words text-xl font-extrabold text-white">
+                {availabilityLabel(availability)}
+              </h3>
+              <p className="mt-2 text-sm font-semibold text-blue-100">
+                Availability #{formatValue(availability.id)}
+              </p>
+            </div>
+            {availability.isActive !== undefined ? (
+              <StatusBadge status={availability.isActive} />
+            ) : null}
+          </div>
+        </div>
+
+        <div className="grid gap-3 p-4 sm:grid-cols-2">
+          <ServiceDetailItem label="Day" value={formatValue(availability.day)} icon={FiCalendar} />
+          <ServiceDetailItem label="Date" value={formatValue(availability.date)} icon={FiFileText} />
+          <ServiceDetailItem label="Start time" value={formatTimeOnly(availability.startTime)} icon={FiClock} />
+          <ServiceDetailItem label="End time" value={formatTimeOnly(availability.endTime)} icon={FiClock} />
+        </div>
+      </section>
+
+      <section className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-[0.68rem] font-extrabold uppercase tracking-[0.12em] text-slate-400">
+            Tutor
+          </p>
+          <p className="mt-2 text-sm font-extrabold text-slate-900">
+            {formatValue(availability.teacherId)}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-[0.68rem] font-extrabold uppercase tracking-[0.12em] text-slate-400">
+            Created
+          </p>
+          <p className="mt-2 text-sm font-extrabold text-slate-900">
+            {formatDateTime(availability.createdAt)}
+          </p>
+        </div>
+      </section>
+
+      {availability.startTime || availability.endTime ? (
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-sm font-extrabold text-slate-950">Schedule window</h3>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <span className="inline-flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-2 text-sm font-extrabold text-haiti-navy">
+              <FiClock className="size-4" />
+              {formatTimeOnly(availability.startTime)}
+            </span>
+            <span className="text-sm font-bold text-slate-400">to</span>
+            <span className="inline-flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-2 text-sm font-extrabold text-haiti-navy">
+              <FiClock className="size-4" />
+              {formatTimeOnly(availability.endTime)}
+            </span>
+          </div>
+        </section>
+      ) : null}
+
+      {rawFields.length ? (
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-sm font-extrabold text-slate-950">Backend fields</h3>
+          <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+            {rawFields.map(([key, value]) => (
+              <div key={key} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <dt className="text-[0.65rem] font-extrabold uppercase tracking-[0.12em] text-slate-400">
+                  {key}
+                </dt>
+                <dd className="mt-1 break-words text-sm font-bold text-slate-800">
+                  {formatBackendFieldValue(key, value)}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ) : null}
+    </div>
+  );
+};
+
+const bookingWindowLabel = (booking: AdminBooking) => {
+  return formatTimeRange(booking.startTime, booking.endTime);
+};
+
+const BookingDetailsPanel = ({ booking }: { booking: AdminBooking }) => {
+  const rawFields = Object.entries(booking.raw).filter(([, value]) => {
+    if (value === undefined || value === null || value === "") return false;
+    return typeof value !== "object";
+  });
+
+  return (
+    <div className="space-y-5">
+      <section className="overflow-hidden rounded-2xl border border-blue-100 bg-blue-50/50">
+        <div className="bg-haiti-navy px-5 py-5 text-white">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+            <div className="min-w-0">
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-blue-100">
+                Booking profile
+              </p>
+              <h3 className="mt-2 break-words text-xl font-extrabold text-white">
+                Booking #{formatValue(booking.id)}
+              </h3>
+              <p className="mt-2 text-sm font-semibold text-blue-100">
+                {formatValue(booking.bookingDate)} · {bookingWindowLabel(booking)}
+              </p>
+            </div>
+            <StatusBadge status={booking.status} />
+          </div>
+        </div>
+
+        <div className="grid gap-3 p-4 sm:grid-cols-2">
+          <ServiceDetailItem label="Booking date" value={formatValue(booking.bookingDate)} icon={FiCalendar} />
+          <ServiceDetailItem label="Time window" value={bookingWindowLabel(booking)} icon={FiClock} />
+          <ServiceDetailItem label="Service" value={formatValue(booking.serviceId)} icon={FiLayers} />
+          <ServiceDetailItem label="Availability" value={formatValue(booking.availabilityId)} icon={FiFileText} />
+        </div>
+      </section>
+
+      <section className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-[0.68rem] font-extrabold uppercase tracking-[0.12em] text-slate-400">
+            Tutor
+          </p>
+          <p className="mt-2 text-sm font-extrabold text-slate-900">
+            {formatValue(booking.teacherId ?? booking.tutorId)}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-[0.68rem] font-extrabold uppercase tracking-[0.12em] text-slate-400">
+            Learner
+          </p>
+          <p className="mt-2 text-sm font-extrabold text-slate-900">
+            {formatValue(booking.studentId ?? booking.learnerId)}
+          </p>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 className="text-sm font-extrabold text-slate-950">Booking notes</h3>
+        <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-600">
+          {booking.notes?.trim() || "No notes were provided for this booking."}
+        </p>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 className="text-sm font-extrabold text-slate-950">Schedule summary</h3>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <span className="inline-flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-2 text-sm font-extrabold text-haiti-navy">
+            <FiCalendar className="size-4" />
+            {formatValue(booking.bookingDate)}
+          </span>
+          <span className="inline-flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-2 text-sm font-extrabold text-haiti-navy">
+            <FiClock className="size-4" />
+            {bookingWindowLabel(booking)}
+          </span>
+        </div>
+      </section>
+
+      {rawFields.length ? (
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-sm font-extrabold text-slate-950">Backend fields</h3>
+          <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+            {rawFields.map(([key, value]) => (
+              <div key={key} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <dt className="text-[0.65rem] font-extrabold uppercase tracking-[0.12em] text-slate-400">
+                  {key}
+                </dt>
+                <dd className="mt-1 break-words text-sm font-bold text-slate-800">
+                  {formatBackendFieldValue(key, value)}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ) : null}
+    </div>
+  );
+};
+
+const getDisplayName = (name?: string) => {
+  const normalizedName = name?.trim();
+
+  if (!normalizedName || ["null", "undefined"].includes(normalizedName.toLowerCase())) {
+    return undefined;
+  }
+
+  return normalizedName;
+};
+
+const AdminWelcomeBanner = ({
+  adminName,
+  isLoading,
+}: {
+  adminName?: string;
+  isLoading?: boolean;
+}) => {
+  const displayName = getDisplayName(adminName);
+
+  return (
+    <header className="relative isolate overflow-hidden rounded-2xl border border-haiti-navy/10 bg-haiti-navy px-5 py-6 shadow-sm sm:px-7 sm:py-7 lg:px-8">
+      <div className="relative grid min-w-0 gap-6 md:grid-cols-[minmax(0,1fr)_minmax(13rem,36%)] md:items-center md:gap-8">
+        <div className="min-w-0 space-y-5">
+          <div>
+            <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/80">
+              Admin Overview
+            </span>
+            <h1
+              aria-busy={isLoading}
+              className="mt-2 flex min-h-9 flex-wrap items-center gap-x-2 text-2xl font-extrabold tracking-tight text-white sm:text-3xl"
+            >
+              <span>Welcome back{isLoading || displayName ? "," : ""}</span>
+              {isLoading ? (
+                <span
+                  aria-label="Loading admin name"
+                  className="inline-block h-7 w-36 animate-pulse rounded-md bg-white/15 sm:h-8 sm:w-48"
+                />
+              ) : displayName ? (
+                <span className="break-words text-blue-100">{displayName}</span>
+              ) : null}
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-100">
+              Monitor platform services, booking activity, operational trends, and recent admin data.
+            </p>
+          </div>
+
+          <nav aria-label="Admin dashboard shortcuts" className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <Link
+              to="/dashboard/admin/services"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 py-2.5 text-xs font-extrabold text-white shadow-sm transition hover:bg-blue-700/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-haiti-navy"
+            >
+              Manage Services
+              <FiArrowRight className="size-3.5" />
+            </Link>
+            <Link
+              to="/dashboard/admin/bookings"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border bg-white px-4 py-2.5 text-xs font-extrabold text-haiti-navy shadow-sm transition hover:border-haiti-navy/25 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-haiti-navy"
+            >
+              View Bookings
+            </Link>
+          </nav>
+        </div>
+
+        <div className="flex min-w-0 justify-center md:justify-end">
+          <div className="relative flex h-40 w-full max-w-64 items-center justify-center md:h-44">
+            <img
+              src="/admin-related-pictures/admin.png"
+              alt="Admin dashboard illustration"
+              className="relative h-full max-h-44 w-auto max-w-full object-contain"
+            />
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
+
 export const AdminOverview = () => {
+  const { data: user, isPending: isUserPending } = useCurrentUser();
   const services = useAdminServices();
-  const availability = useAdminAvailability();
   const bookings = useAdminBookings();
 
   const serviceData = services.data ?? [];
-  const availabilityData = availability.data ?? [];
   const bookingData = bookings.data ?? [];
   const serviceCategories = countBy(serviceData, (item) => item.category);
   const serviceLanguages = countBy(serviceData, (item) => item.language);
-  const bookingStatuses = countBy(bookingData, (item) => item.status);
   const recentServices = byDateDesc(serviceData).slice(0, 5);
   const recentBookings = byDateDesc(bookingData).slice(0, 5);
   const activeServices = serviceData.filter((item) => item.isActive === true).length;
+  const pendingBookings = bookingData.filter((item) => isPendingStatus(item.status)).length;
 
   return (
     <section className="space-y-6">
-      <PageHeader
-        eyebrow="Admin overview"
-        title="Platform activity"
-        description="Operational summary calculated only from the documented services, availability, and bookings endpoints."
-      />
+      <AdminWelcomeBanner adminName={user?.full_name} isLoading={isUserPending} />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total services" value={serviceData.length} icon={FiLayers} />
-        {has(serviceData, (item) => item.isActive) ? (
-          <StatCard label="Active services" value={activeServices} icon={FiLayers} />
-        ) : null}
-        <StatCard
-          label="Availability records"
-          value={availabilityData.length}
-          icon={FiClock}
-        />
+        <StatCard label="Active services" value={activeServices} icon={FiLayers} />
         <StatCard label="Total bookings" value={bookingData.length} icon={FiCalendar} />
+        <StatCard label="Pending bookings" value={pendingBookings} icon={FiCalendar} />
       </div>
 
       <div className="grid gap-3">
-        {services.isLoading || availability.isLoading || bookings.isLoading ? (
+        {services.isLoading || bookings.isLoading ? (
           <LoadingSkeleton rows={2} />
         ) : null}
         {services.isError ? (
           <PartialError label="Services" error={services.error} onRetry={() => services.refetch()} />
         ) : null}
-        {availability.isError ? (
-          <PartialError
-            label="Availability"
-            error={availability.error}
-            onRetry={() => availability.refetch()}
-          />
-        ) : null}
         {bookings.isError ? (
           <PartialError label="Bookings" error={bookings.error} onRetry={() => bookings.refetch()} />
         ) : null}
       </div>
-
-      {bookingStatuses.length ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {bookingStatuses.map((item) => (
-            <StatCard
-              key={item.name}
-              label={`${item.name} bookings`}
-              value={item.value}
-              icon={FiCalendar}
-            />
-          ))}
-        </div>
-      ) : null}
 
       <div className="grid gap-6 xl:grid-cols-2">
         <DistributionChart title="Service categories" data={serviceCategories} type="bar" />
@@ -417,9 +808,11 @@ export const AdminServices = () => {
     });
   }
 
+  const serviceForDetails = detail.data ?? selected;
+
   return (
     <section className="space-y-6">
-      <PageHeader
+      <AdminSectionHeader
         eyebrow="Platform Activity"
         title="Services"
         description="Read-only monitoring for all documented service fields. Owner-only edit and delete actions are intentionally not exposed."
@@ -458,7 +851,7 @@ export const AdminServices = () => {
       >
         {detail.isLoading ? <LoadingSkeleton rows={2} /> : null}
         {detail.isError ? <ErrorState message={getErrorMessage(detail.error)} onRetry={() => detail.refetch()} /> : null}
-        {detail.data ? <RawDetails record={detail.data.raw} /> : selected ? <RawDetails record={selected.raw} /> : null}
+        {serviceForDetails ? <ServiceDetailsPanel service={serviceForDetails} /> : null}
       </DetailsDrawer>
 
       <DetailsDrawer
@@ -530,16 +923,17 @@ export const AdminAvailability = () => {
     ...(has(items, (item) => item.day)
       ? [{ key: "day", header: "Day", render: (item: AdminAvailabilityRecord) => formatValue(item.day) }]
       : []),
-    { key: "start", header: "Start", render: (item) => formatValue(item.startTime) },
-    { key: "end", header: "End", render: (item) => formatValue(item.endTime) },
+    { key: "start", header: "Start", render: (item) => formatTimeOnly(item.startTime) },
+    { key: "end", header: "End", render: (item) => formatTimeOnly(item.endTime) },
     ...(has(items, (item) => item.isActive)
       ? [{ key: "state", header: "State", render: (item: AdminAvailabilityRecord) => <StatusBadge status={item.isActive} /> }]
       : []),
   ];
+  const availabilityForDetails = detail.data ?? selected;
 
   return (
     <section className="space-y-6">
-      <PageHeader
+      <AdminSectionHeader
         eyebrow="Platform Activity"
         title="Availability"
         description="Read-only tutor availability inspection using the documented availability endpoints."
@@ -566,7 +960,7 @@ export const AdminAvailability = () => {
       <DetailsDrawer open={Boolean(selected)} title="Availability details" onClose={() => setSelected(null)}>
         {detail.isLoading ? <LoadingSkeleton rows={2} /> : null}
         {detail.isError ? <ErrorState message={getErrorMessage(detail.error)} onRetry={() => detail.refetch()} /> : null}
-        {detail.data ? <RawDetails record={detail.data.raw} /> : selected ? <RawDetails record={selected.raw} /> : null}
+        {availabilityForDetails ? <AvailabilityDetailsPanel availability={availabilityForDetails} /> : null}
       </DetailsDrawer>
 
       <DetailsDrawer open={teacherId !== undefined} title="Tutor availability" description={teacherId !== undefined ? `Teacher #${teacherId}` : undefined} onClose={() => setTeacherId(undefined)}>
@@ -620,7 +1014,7 @@ export const AdminBookings = () => {
     ...(has(items, (item) => item.bookingDate)
       ? [{ key: "date", header: "Date", render: (item: AdminBooking) => formatValue(item.bookingDate) }]
       : []),
-    { key: "time", header: "Time", render: (item) => `${formatValue(item.startTime)} - ${formatValue(item.endTime)}` },
+    { key: "time", header: "Time", render: (item) => formatTimeRange(item.startTime, item.endTime) },
     {
       key: "tutor",
       header: "Tutor ID",
@@ -654,10 +1048,11 @@ export const AdminBookings = () => {
       ),
     },
   ];
+  const bookingForDetails = detail.data ?? selected;
 
   return (
     <section className="space-y-6">
-      <PageHeader
+      <AdminSectionHeader
         eyebrow="Platform Activity"
         title="Bookings"
         description="Read-only booking inspection. Mutation endpoints are documented, but admin authorization is not confirmed, so destructive and status actions are not shown."
@@ -689,7 +1084,7 @@ export const AdminBookings = () => {
       <DetailsDrawer open={Boolean(selected)} title="Booking details" onClose={() => setSelected(null)}>
         {detail.isLoading ? <LoadingSkeleton rows={2} /> : null}
         {detail.isError ? <ErrorState message={getErrorMessage(detail.error)} onRetry={() => detail.refetch()} /> : null}
-        {detail.data ? <RawDetails record={detail.data.raw} /> : selected ? <RawDetails record={selected.raw} /> : null}
+        {bookingForDetails ? <BookingDetailsPanel booking={bookingForDetails} /> : null}
       </DetailsDrawer>
 
       <DetailsDrawer open={relatedTeacherId !== undefined} title="Tutor bookings" description={relatedTeacherId !== undefined ? `Teacher #${relatedTeacherId}` : undefined} onClose={() => setRelatedTeacherId(undefined)}>
@@ -939,7 +1334,7 @@ export const AdminFiles = () => {
 
   return (
     <section className="space-y-6">
-      <PageHeader
+      <AdminSectionHeader
         eyebrow="Translation management"
         title="Translation Requests"
         description="Review learner translation requests, see pending work quickly, and manage every file attached to each real backend request."
@@ -950,7 +1345,7 @@ export const AdminFiles = () => {
               requestsQuery.refetch();
               fileQueries.forEach((query) => query.refetch());
             }}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-haiti-navy px-4 text-sm font-extrabold text-white transition hover:bg-haiti-navy-dark"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-white px-4 text-sm font-extrabold text-haiti-navy shadow-sm transition hover:bg-blue-50"
           >
             <FiRefreshCw className="size-4" />
             Refresh
@@ -1107,263 +1502,12 @@ export const AdminFiles = () => {
   );
 };
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const AdminSettings = () => (
+  <AccountSettingsPage
+    eyebrow="Admin Preferences"
+    title="Admin Settings"
+    description="Manage your administrator profile, access permissions, and account security."
+    roleBadgeLabel="System Administrator"
+  />
+);
 
-export const AdminSettings = () => {
-  const userQuery = useCurrentUser();
-  const user = userQuery.data;
-  const [infoDraft, setInfoDraft] = useState<{ fullName?: string; email?: string }>({});
-  const [infoErrors, setInfoErrors] = useState<Record<string, string>>({});
-  const [infoSubmitPending, setInfoSubmitPending] = useState(false);
-  const [infoSubmitNotice, setInfoSubmitNotice] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showCurrent, setShowCurrent] = useState(false);
-  const [showNew, setShowNew] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
-  const [passwordSubmitPending, setPasswordSubmitPending] = useState(false);
-  const [passwordSubmitNotice, setPasswordSubmitNotice] = useState("");
-
-  const fullName = infoDraft.fullName ?? user?.full_name ?? "";
-  const email = infoDraft.email ?? user?.email ?? "";
-
-  const resetInfoForm = () => {
-    setInfoDraft({});
-    setInfoErrors({});
-    setInfoSubmitNotice("");
-  };
-
-  const resetPasswordForm = () => {
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    setPasswordErrors({});
-    setPasswordSubmitNotice("");
-  };
-
-  const handleSaveInfo = (event: FormEvent) => {
-    event.preventDefault();
-    if (infoSubmitPending) return;
-
-    const errors: Record<string, string> = {};
-    if (!fullName.trim()) errors.fullName = "Full name is required";
-    else if (fullName.trim().length < 2) errors.fullName = "Full name must contain at least 2 characters";
-
-    if (!email.trim()) errors.email = "Email is required";
-    else if (!EMAIL_REGEX.test(email.trim())) errors.email = "Please enter a valid email address";
-
-    if (Object.keys(errors).length) {
-      setInfoErrors(errors);
-      setInfoSubmitNotice("");
-      return;
-    }
-
-    setInfoErrors({});
-    setInfoSubmitNotice("");
-    setInfoSubmitPending(true);
-    window.setTimeout(() => {
-      setInfoSubmitPending(false);
-      setInfoSubmitNotice("Profile editing is not available yet because the backend update API has not been implemented.");
-    }, 800);
-  };
-
-  const handleUpdatePassword = (event: FormEvent) => {
-    event.preventDefault();
-    if (passwordSubmitPending) return;
-
-    const errors: Record<string, string> = {};
-    if (!currentPassword) errors.currentPassword = "Current password is required";
-    if (!newPassword) {
-      errors.newPassword = "New password is required";
-    } else {
-      const rules = [
-        [newPassword.length < 8, "New password must contain at least 8 characters"],
-        [!/[A-Z]/.test(newPassword), "Must contain at least one uppercase letter"],
-        [!/[a-z]/.test(newPassword), "Must contain at least one lowercase letter"],
-        [!/[0-9]/.test(newPassword), "Must contain at least one number"],
-      ] as const;
-      errors.newPassword = rules.filter(([failed]) => failed).map(([, message]) => message).join(". ");
-      if (!errors.newPassword) delete errors.newPassword;
-    }
-    if (!confirmPassword) errors.confirmPassword = "Confirm password is required";
-    else if (confirmPassword !== newPassword) errors.confirmPassword = "Passwords do not match";
-    if (newPassword && currentPassword && newPassword === currentPassword) {
-      errors.newPassword = "The new password must not be the same as the current password";
-    }
-
-    if (Object.keys(errors).length) {
-      setPasswordErrors(errors);
-      setPasswordSubmitNotice("");
-      return;
-    }
-
-    setPasswordErrors({});
-    setPasswordSubmitNotice("");
-    setPasswordSubmitPending(true);
-    window.setTimeout(() => {
-      setPasswordSubmitPending(false);
-      setPasswordSubmitNotice("Password updates are not available yet because the backend change-password API has not been implemented.");
-    }, 800);
-  };
-
-  return (
-    <section className="space-y-6">
-      <div className="overflow-hidden rounded-3xl bg-haiti-navy px-5 py-7 text-white shadow-sm sm:px-8 sm:py-9">
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-200">Account settings</p>
-        <h1 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">Admin Settings</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100">
-          Manage your administrator profile and account security.
-        </p>
-      </div>
-
-      {userQuery.isLoading ? (
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="h-96 animate-pulse rounded-3xl bg-slate-100" />
-          <div className="h-96 animate-pulse rounded-3xl bg-slate-100" />
-        </div>
-      ) : userQuery.isError ? (
-        <ErrorState title="Could not load settings data" message={getErrorMessage(userQuery.error)} onRetry={() => userQuery.refetch()} />
-      ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <article className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
-            <form onSubmit={handleSaveInfo} className="flex flex-1 flex-col justify-between space-y-6">
-              <div>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-haiti-red">Personal info</span>
-                    <h2 className="mt-1 text-lg font-extrabold text-slate-900">Personal Information</h2>
-                    <p className="mt-1.5 text-xs font-semibold text-slate-400">Update your display name and registered email address.</p>
-                  </div>
-                  <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-blue-50 text-haiti-navy">
-                    <FiUser className="size-5" />
-                  </span>
-                </div>
-
-                <div className="mt-6 space-y-4">
-                  <label className="block">
-                    <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">Full Name</span>
-                    <input
-                      type="text"
-                      value={fullName}
-                      onChange={(event) => {
-                        setInfoDraft((current) => ({ ...current, fullName: event.target.value }));
-                        if (infoErrors.fullName) {
-                          setInfoErrors((current) => {
-                            const copy = { ...current };
-                            delete copy.fullName;
-                            return copy;
-                          });
-                        }
-                      }}
-                      className={`h-11 w-full rounded-xl border px-4 text-sm font-semibold text-slate-700 outline-none transition ${infoErrors.fullName ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-50" : "border-slate-200 bg-slate-50/50 hover:border-slate-300 focus:border-haiti-navy focus:bg-white"}`}
-                      placeholder="Enter your full name"
-                    />
-                    {infoErrors.fullName ? <p className="mt-1.5 flex items-center gap-1 text-xs font-bold text-red-500"><FiAlertCircle />{infoErrors.fullName}</p> : null}
-                  </label>
-
-                  <label className="block">
-                    <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">Email Address</span>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(event) => {
-                        setInfoDraft((current) => ({ ...current, email: event.target.value }));
-                        if (infoErrors.email) {
-                          setInfoErrors((current) => {
-                            const copy = { ...current };
-                            delete copy.email;
-                            return copy;
-                          });
-                        }
-                      }}
-                      className={`h-11 w-full rounded-xl border px-4 text-sm font-semibold text-slate-700 outline-none transition ${infoErrors.email ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-50" : "border-slate-200 bg-slate-50/50 hover:border-slate-300 focus:border-haiti-navy focus:bg-white"}`}
-                      placeholder="Enter your email"
-                    />
-                    {infoErrors.email ? <p className="mt-1.5 flex items-center gap-1 text-xs font-bold text-red-500"><FiAlertCircle />{infoErrors.email}</p> : null}
-                  </label>
-                </div>
-              </div>
-
-              <div className="mt-6 border-t border-slate-100 pt-5">
-                {infoSubmitNotice ? <div className="mb-4 flex gap-2.5 rounded-xl border border-blue-100 bg-blue-50/40 p-4 text-xs font-semibold text-haiti-navy"><FiAlertCircle className="size-4 shrink-0 text-blue-600" /><span>{infoSubmitNotice}</span></div> : null}
-                <div className="flex flex-wrap gap-3">
-                  <button type="submit" disabled={infoSubmitPending} className="inline-flex min-h-11 min-w-[7.5rem] items-center justify-center rounded-xl bg-haiti-navy px-5 text-sm font-bold text-white shadow-xs transition hover:bg-slate-800 disabled:pointer-events-none disabled:opacity-50">
-                    {infoSubmitPending ? <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : "Save Changes"}
-                  </button>
-                  <button type="button" onClick={resetInfoForm} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 shadow-xs transition hover:border-slate-300 hover:bg-slate-50">
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </form>
-          </article>
-
-          <article className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
-            <form onSubmit={handleUpdatePassword} className="flex flex-1 flex-col justify-between space-y-6">
-              <div>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-haiti-red">Security</span>
-                    <h2 className="mt-1 text-lg font-extrabold text-slate-900">Password and Security</h2>
-                    <p className="mt-1.5 text-xs font-semibold text-slate-400">Change your password to keep your admin account safe.</p>
-                  </div>
-                  <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-purple-50 text-purple-600">
-                    <FiKey className="size-5" />
-                  </span>
-                </div>
-
-                <div className="mt-6 space-y-4">
-                  {[
-                    ["Current Password", currentPassword, setCurrentPassword, showCurrent, setShowCurrent, "currentPassword"],
-                    ["New Password", newPassword, setNewPassword, showNew, setShowNew, "newPassword"],
-                    ["Confirm New Password", confirmPassword, setConfirmPassword, showConfirm, setShowConfirm, "confirmPassword"],
-                  ].map(([label, value, setValue, shown, setShown, key]) => (
-                    <label key={String(key)} className="block">
-                      <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">{String(label)}</span>
-                      <div className="relative">
-                        <input
-                          type={shown ? "text" : "password"}
-                          value={String(value)}
-                          onChange={(event) => {
-                            (setValue as (value: string) => void)(event.target.value);
-                            if (passwordErrors[String(key)]) {
-                              setPasswordErrors((current) => {
-                                const copy = { ...current };
-                                delete copy[String(key)];
-                                return copy;
-                              });
-                            }
-                          }}
-                          className={`h-11 w-full rounded-xl border pl-4 pr-11 text-sm font-semibold text-slate-700 outline-none transition ${passwordErrors[String(key)] ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-50" : "border-slate-200 bg-slate-50/50 hover:border-slate-300 focus:border-haiti-navy focus:bg-white"}`}
-                          placeholder="••••••••"
-                        />
-                        <button type="button" onClick={() => (setShown as (value: boolean) => void)(!shown)} className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600" aria-label={`${shown ? "Hide" : "Show"} ${String(label).toLowerCase()}`}>
-                          {shown ? <FiEyeOff className="size-4" /> : <FiEye className="size-4" />}
-                        </button>
-                      </div>
-                      {passwordErrors[String(key)] ? <p className="mt-1.5 flex items-start gap-1 text-xs font-bold leading-snug text-red-500"><FiAlertCircle className="mt-0.5 shrink-0" /><span>{passwordErrors[String(key)]}</span></p> : null}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-6 border-t border-slate-100 pt-5">
-                {passwordSubmitNotice ? <div className="mb-4 flex gap-2.5 rounded-xl border border-blue-100 bg-blue-50/40 p-4 text-xs font-semibold text-haiti-navy"><FiAlertCircle className="size-4 shrink-0 text-blue-600" /><span>{passwordSubmitNotice}</span></div> : null}
-                <div className="flex flex-wrap gap-3">
-                  <button type="submit" disabled={passwordSubmitPending} className="inline-flex min-h-11 min-w-[8.5rem] items-center justify-center rounded-xl bg-haiti-navy px-5 text-sm font-bold text-white shadow-xs transition hover:bg-slate-800 disabled:pointer-events-none disabled:opacity-50">
-                    {passwordSubmitPending ? <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : "Update Password"}
-                  </button>
-                  <button type="button" onClick={resetPasswordForm} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 shadow-xs transition hover:border-slate-300 hover:bg-slate-50">
-                    Reset Form
-                  </button>
-                </div>
-              </div>
-            </form>
-          </article>
-        </div>
-      )}
-    </section>
-  );
-};
