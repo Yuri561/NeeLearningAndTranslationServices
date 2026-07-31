@@ -11,7 +11,7 @@ export const ContactInfo = () => {
           
           {/* Email Address */}
           <a 
-            href="mailto:info@neeslearning.com"
+            href="mailto:NeesLearning@gmail.com"
             className="flex gap-4 items-center p-5 rounded-2xl border border-blue-400/10 bg-slate-50/50 hover:bg-white hover:border-blue-400/20 hover:shadow-lg transition-all duration-300 group"
           >
             <div className="shrink-0 w-10 h-10 rounded-xl bg-haiti-red/5 flex items-center justify-center text-haiti-red group-hover:bg-haiti-red group-hover:text-white transition-all duration-300">
@@ -19,7 +19,7 @@ export const ContactInfo = () => {
             </div>
             <div>
               <h4 className="font-roxborough text-sm font-bold text-haiti-navy">Email Support</h4>
-              <p className="text-sm text-haiti-red font-semibold mt-0.5 font-mono">info@neeslearning.com</p>
+              <p className="text-sm text-haiti-red font-semibold mt-0.5 font-mono">Neeslearning@gmail.com</p>
             </div>
           </a>
 
@@ -57,19 +57,19 @@ export const ContactInfo = () => {
             <div className="shrink-0 w-5 h-5 rounded-full bg-haiti-red/20 border border-haiti-red/35 flex items-center justify-center mt-0.5 text-haiti-red">
               <FaCheck className="w-2.5 h-2.5 text-white" />
             </div>
-            <span>USCIS-approved certified translations</span>
+            <span>Every lesson is tailored to your experience.</span>
           </li>
           <li className="flex gap-3 items-start text-sm text-white/90">
             <div className="shrink-0 w-5 h-5 rounded-full bg-haiti-red/20 border border-haiti-red/35 flex items-center justify-center mt-0.5 text-haiti-red">
               <FaCheck className="w-2.5 h-2.5 text-white" />
             </div>
-            <span>100% native Haitian Creole speakers & educators</span>
+            <span>Your documents and personal information are handled with care.</span>
           </li>
           <li className="flex gap-3 items-start text-sm text-white/90">
             <div className="shrink-0 w-5 h-5 rounded-full bg-haiti-red/20 border border-haiti-red/35 flex items-center justify-center mt-0.5 text-haiti-red">
               <FaCheck className="w-2.5 h-2.5 text-white" />
             </div>
-            <span>Secure & private transmission of legal documents</span>
+            <span>Learn from knowledgeable tutors dedicated to your success.</span>
           </li>
         </ul>
       </div>

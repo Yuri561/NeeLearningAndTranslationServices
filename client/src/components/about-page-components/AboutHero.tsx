@@ -40,7 +40,7 @@ export const AboutHero = () => {
           className={`max-w-2xl text-blue-100/70 text-base sm:text-md md:text-lg xl:text-md 3xl:text-xl  leading-relaxed transition-all duration-700 ease-out delay-150 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
             }`}
         >
-          We deliver structured language instruction and certified translation services that honor cultural heritage and help families, students, and professionals communicate naturally.
+          We deliver structured language learning and translation services that honor cultural heritage and help families, students, and professionals communicate naturally.
         </p>
 
         <Link

@@ -48,10 +48,10 @@ export const AboutStory = () => {
             with <em className="italic text-haiti-red font-medium">global communication</em>.
           </h2>
           
-          <p className="text-[#6B7280] leading-relaxed text-base sm:text-lg font-sans">
-            Nee's Learning & Translation Services was founded to help students, professionals, and families connect through the beauty and richness of Haitian Creole.
-            What began as a passion for sharing the language and culture has grown into a trusted service providing expert instruction and certified translation solutions for individuals and communities.
-          </p>
+          <p className="text-[#18181B] leading-relaxed text-base sm:text-lg font-sans">
+            Nee’s Learning & Translation Services was founded with a heartfelt mission: to help students, professionals, and families connect through the beauty, history, and richness of Haitian Creole.
+            What began as a passion for sharing the language and culture has grown into a trusted service where people can learn, communicate, and feel connected. 
+            </p>
 
           {/* Structured point grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
@@ -60,7 +60,7 @@ export const AboutStory = () => {
                 <FaHeart className="w-4 h-4" />
               </div>
               <h4 className="font-roxborough text-lg font-bold text-haiti-navy">Linguistic Pride</h4>
-              <p className="text-xs sm:text-sm text-[#6B7280] leading-relaxed">
+              <p className="text-xs sm:text-sm text-[#18181B] leading-relaxed">
                 We support students gain confidence, understanding cultural traditions, and connecting with their language through authentic language instruction.
               </p>
             </div>
@@ -70,7 +70,7 @@ export const AboutStory = () => {
                 <FaGlobe className="w-4 h-4" />
               </div>
               <h4 className="font-roxborough text-lg font-bold text-haiti-navy">Certified Integrity</h4>
-              <p className="text-xs sm:text-sm text-[#6B7280] leading-relaxed">
+              <p className="text-xs sm:text-sm text-[#18181B] leading-relaxed">
                 We provide accurate, certified translations for essential documents, supporting legal, medical, and administrative needs.
               </p>
             </div>

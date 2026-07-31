@@ -87,7 +87,7 @@ const Footer = () => {
           <div className="flex flex-col gap-5 max-w-[280px] flex-shrink-0 max-[900px]:max-w-full">
             <Logo variant="light" />
 
-            <p className="font-sans text-[15px] leading-[1.65] text-white/60 m-0">
+            <p className="font-sans text-[17px] leading-[1.65] text-white/70 m-0">
               Empowering learners through structured Haitian Kreyòl and
               certified translation services.
             </p>
@@ -120,7 +120,7 @@ const Footer = () => {
           >
             {/* Services column */}
             <nav aria-label="Services links" className="flex flex-col gap-4 min-w-[120px]">
-              <h3 className="font-sans text-[11px] font-bold tracking-[0.12em] uppercase text-white/50 m-0 leading-[1.4]">
+              <h3 className="font-sans text-[17px] font-bold tracking-[0.12em] uppercase text-white/50 m-0 leading-[1.4]">
                 Services
               </h3>
               <ul className="list-none p-0 m-0 flex flex-col gap-[11px]">
@@ -128,7 +128,7 @@ const Footer = () => {
                   <li key={l.label}>
                     <a
                       href={l.href}
-                      className="font-sans text-[14px] text-white/65 no-underline leading-[1.4] transition-colors duration-200 [@media(hover:hover)]:hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/50 focus-visible:outline-offset-[2px] focus-visible:rounded-[2px] focus-visible:text-white"
+                      className="font-sans text-[17px] text-white/65 no-underline leading-[1.4] transition-colors duration-200 [@media(hover:hover)]:hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/50 focus-visible:outline-offset-[2px] focus-visible:rounded-[2px] focus-visible:text-white"
                     >
                       {l.label}
                     </a>
@@ -139,7 +139,7 @@ const Footer = () => {
 
             {/* Company column */}
             <nav aria-label="Company links" className="flex flex-col gap-4 min-w-[120px]">
-              <h3 className="font-sans text-[11px] font-bold tracking-[0.12em] uppercase text-white/50 m-0 leading-[1.4]">
+              <h3 className="font-sans text-[17px] font-bold tracking-[0.12em] uppercase text-white/50 m-0 leading-[1.4]">
                 Company
               </h3>
               <ul className="list-none p-0 m-0 flex flex-col gap-[11px]">
@@ -147,7 +147,7 @@ const Footer = () => {
                   <li key={l.label}>
                     <a
                       href={l.href}
-                      className="font-sans text-[14px] text-white/65 no-underline leading-[1.4] transition-colors duration-200 [@media(hover:hover)]:hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/50 focus-visible:outline-offset-[2px] focus-visible:rounded-[2px] focus-visible:text-white"
+                      className="font-sans text-[17px] text-white/65 no-underline leading-[1.4] transition-colors duration-200 [@media(hover:hover)]:hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/50 focus-visible:outline-offset-[2px] focus-visible:rounded-[2px] focus-visible:text-white"
                     >
                       {l.label}
                     </a>
@@ -158,24 +158,24 @@ const Footer = () => {
 
             {/* Contact column */}
             <div aria-label="Contact information" className="flex flex-col gap-4 min-w-[120px]">
-              <h3 className="font-sans text-[11px] font-bold tracking-[0.12em] uppercase text-white/50 m-0 leading-[1.4]">
+              <h3 className="font-sans text-[17px] font-bold tracking-[0.12em] uppercase text-white/50 m-0 leading-[1.4]">
                 Get in Touch
               </h3>
               <ul className="list-none p-0 m-0 flex flex-col gap-[11px]">
                 <li>
                   <a
                     href="mailto:info@neeslearning.com"
-                    className="flex items-center gap-2 font-sans text-[14px] text-white/65 no-underline leading-[1.4] transition-colors duration-200 [@media(hover:hover)]:hover:text-white"
+                    className="flex items-center gap-2 font-sans text-[17px] text-white/65 no-underline leading-[1.4] transition-colors duration-200 [@media(hover:hover)]:hover:text-white"
                     aria-label="Email us at info@neeslearning.com"
                   >
-                    <IoMailOutline aria-hidden="true" className="text-[16px] flex-shrink-0 opacity-80" />
-                    info@neeslearning.com
+                    <IoMailOutline aria-hidden="true" className="text-[20px] flex-shrink-0 opacity-80" />
+                    Neeslearning@gmail.com
                   </a>
                 </li>
                 <li>
                   <a
                     href="tel:+15551234567"
-                    className="flex items-center gap-2 font-sans text-[14px] text-white/65 no-underline leading-[1.4] transition-colors duration-200 [@media(hover:hover)]:hover:text-white"
+                    className="flex items-center gap-2 font-sans text-[17px] text-white/65 no-underline leading-[1.4] transition-colors duration-200 [@media(hover:hover)]:hover:text-white"
                     aria-label="Call us at +1 555 123 4567"
                   >
                     <IoCallOutline aria-hidden="true" className="text-[16px] flex-shrink-0 opacity-80" />
@@ -204,7 +204,7 @@ const Footer = () => {
 
         {/* ── Bottom row ── */}
         <div className="flex flex-row items-center justify-between flex-wrap gap-4 max-[580px]:flex-col max-[580px]:items-start max-[580px]:gap-3">
-          <p className="font-sans text-[13px] text-white/40 m-0 leading-[1.5]">
+          <p className="font-sans text-[17px] text-white/40 m-0 leading-[1.5]">
             &copy; {CURRENT_YEAR} Nee&apos;s Learning &amp; Translation Services.
             All rights reserved.
           </p>

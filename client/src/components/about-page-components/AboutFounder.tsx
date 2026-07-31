@@ -65,7 +65,7 @@ export const AboutFounder = () => {
             </p>
             <div className="w-full h-px bg-slate-100 my-3" />
             <p className="text-right text-[11px] font-bold text-haiti-red tracking-wider uppercase">
-              Nee, Certified Translator
+              Needo, Translator
             </p>
           </div>
         </div>
@@ -93,7 +93,7 @@ export const AboutFounder = () => {
                 <FaCheck className="w-2.5 h-2.5" />
               </div>
               <div>
-                <h4 className="font-roxborough text-[17px] font-bold text-haiti-navy">Bilingual Curriculum Engineering</h4>
+                <h4 className="font-roxborough text-[17px] font-bold text-haiti-navy">Bilingual Curriculum</h4>
                 <p className="text-sm text-[#6B7280] mt-0.5 leading-relaxed">
                   Custom learning paths designed around conversational fluency, practical grammar, and deep cultural immersion.
                 </p>
@@ -105,9 +105,9 @@ export const AboutFounder = () => {
                 <FaCheck className="w-2.5 h-2.5" />
               </div>
               <div>
-                <h4 className="font-roxborough text-[17px] font-bold text-haiti-navy">Certified Legal & Medical Review</h4>
+                <h4 className="font-roxborough text-[17px] font-bold text-haiti-navy">Cultural Insights</h4>
                 <p className="text-sm text-[#6B7280] mt-0.5 leading-relaxed">
-                  Translation certificates recognized by USCIS, academic institutions, health systems, and international embassies.
+                  Understand the culture behind the language and communicate more naturally in real-world situations.
                 </p>
               </div>
             </div>

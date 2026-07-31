@@ -5,7 +5,7 @@ import WhyChooseSection from "../../components/homeComponents/WhyChooseSection";
 import FactSection from "../../components/homeComponents/FactSection";
 import ProcessSection from "../../components/homeComponents/ProcessSection";
 import OptimizeSection from "../../components/homeComponents/OptimizeSection";
-import PricingSection from "../../components/homeComponents/PricingSection";
+import TutorsSection from "../../components/homeComponents/TutorsSection";
 import ContactSection from "../../components/homeComponents/ContactSection";
 import TickerForLanguage from "../../components/homeComponents/TickerForLanguage";
 
@@ -20,7 +20,7 @@ const Home = () => {
       <FactSection />
       <ProcessSection />
       <OptimizeSection />
-      <PricingSection />
+      <TutorsSection />
       <ContactSection />
     </main>
   );

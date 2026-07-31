@@ -11,24 +11,24 @@ const workflow = [
   },
   {
     number: "02",
-    title: "A tailored plan",
+    title: "Personalized Learning Plan",
     description:
-      "Our bilingual educators shape your curriculum while certified translators prepare a clear, accurate scope of work.",
+      "Track your learning progress, manage your lessons, and stay organized with a personalized language learning dashboard.",
     label: "Design",
   },
   {
     number: "03",
-    title: "Expert guidance",
+    title: "One-on-One Support",
     description:
-      "Learn through active coaching or receive a careful peer review that protects meaning, context, and cultural nuance.",
-    label: "Refine",
+      "Receive personalized language instruction or professional translation services delivered with accuracy, care, and cultural understanding.",
+    label: "Improve",
   },
   {
     number: "04",
-    title: "Delivery & progress",
+    title: "Translation Status",
     description:
-      "Receive secure certified documents or track meaningful language milestones with a clear path for what comes next.",
-    label: "Deliver",
+      "Receive accurate certified translations with a simple, reliable process.",
+    label: "Provide",
   },
 ];
 
@@ -95,9 +95,8 @@ const OptimizeSection = () => {
             <em className="font-medium text-haiti-red">confident results.</em>
           </h2>
 
-          <p className="mt-6 max-w-lg text-base leading-7 text-gray-500">
-            Every project follows a thoughtful four-step workflow—giving you
-            clarity, expert support, and visible progress from the very start.
+          <p className="mt-6 max-w-lg text-base leading-7 text-black-500">
+            From your first request to final results, our structured process ensures clear communication, professional support, and quality outcomes.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 border-y border-haiti-navy/[0.08] py-5 text-xs font-bold text-haiti-navy/60">

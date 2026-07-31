@@ -68,7 +68,7 @@ const ValueCard = ({ value, index, isVisible }: { value: CoreValue; index: numbe
               className={`w-6 h-6 transition-all duration-[450ms] group-hover:scale-110 group-hover:text-white ${colorClass}`}
             />
           </div>
-          <span className="text-[10px] tracking-[0.12em] uppercase font-bold text-gray-400 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+          <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-gray-400 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
             {badge}
           </span>
         </div>
@@ -77,7 +77,7 @@ const ValueCard = ({ value, index, isVisible }: { value: CoreValue; index: numbe
           {title}
         </h3>
 
-        <p className="text-sm leading-[1.7] text-[#6B7280] font-sans">
+        <p className="text-sm leading-[1.9] text-[#6B7280] font-sans">
           {description}
         </p>
       </div>

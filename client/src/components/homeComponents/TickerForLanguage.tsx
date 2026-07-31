@@ -48,10 +48,10 @@ const TickerForLanguage = () => {
 
       <div className="mx-auto flex max-w-8xl flex-col gap-4 px-4 sm:px-6 lg:px-20">
         <div className="flex flex-col items-center justify-between gap-3 text-center lg:flex-row lg:text-left">
-          <p className="font-sans text-[11px] font-extrabold uppercase tracking-[0.34em] text-[var(--color-accent)]">
-            Languages We Support
+          <p className="font-sans text-[11px] font-extrabold uppercase tracking-[0.39em] text-[var(--color-accent)]">
+            Languages We Teach
           </p>
-          <p className="max-w-2xl text-sm font-medium tracking-[0.08em] text-slate-600 uppercase sm:text-[15px]">
+          <p className="max-w-2xl text-sm font-medium tracking-[0.09em] text-slate-600 uppercase sm:text-[15px]">
             Learn, translate, and communicate with confidence across every step.
           </p>
         </div>

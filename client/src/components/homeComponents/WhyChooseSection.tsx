@@ -14,24 +14,25 @@ interface FeatureCardData {
 }
 
 const features: FeatureCardData[] = [
+  // This part is not needed - Deleting for better readability - Rae
+  // {
+  //   headline: "Designed for ease, built for real learning outcomes.",
+  //   body: "Skip the confusion and experience structured language learning that works anytime, anywhere. Whether you're starting Kreyòl from scratch, improving English fluency, or helping your child, our programs adapt to your goals.",
+  //   point1Title: "Safe, seamless, and always certified",
+  //   point1Body:
+  //     "All lessons are built by bilingual educators and certified translators. Your learning path is always guided, clear, and designed to last.",
+  //   point2Title: "Track every milestone in real time",
+  //   point2Body:
+  //     "Instant progress tracking so you always know where you stand and what's coming next on your journey.",
+  //   top: "130px",
+  //   imagePosition: "left",
+  //   image: "/choose-us-pictures/first-card.jpg",
+  //   imageAlt:
+  //     "Student studying language courses on a laptop with interactive lesson panels",
+  // },
   {
-    headline: "Designed for ease, built for real learning outcomes.",
-    body: "Skip the confusion and experience structured language learning that works anytime, anywhere. Whether you're starting Kreyòl from scratch, improving English fluency, or helping your child, our programs adapt to your goals.",
-    point1Title: "Safe, seamless, and always certified",
-    point1Body:
-      "All lessons are built by bilingual educators and certified translators. Your learning path is always guided, clear, and designed to last.",
-    point2Title: "Track every milestone in real time",
-    point2Body:
-      "Instant progress tracking so you always know where you stand and what's coming next on your journey.",
-    top: "130px",
-    imagePosition: "left",
-    image: "/choose-us-pictures/first-card.jpg",
-    imageAlt:
-      "Student studying language courses on a laptop with interactive lesson panels",
-  },
-  {
-    headline: "Translate with precision, communicate with clarity.",
-    body: "Get your documents translated instantly, without waiting. From legal papers to everyday forms, everything is handled smoothly, accurately, and with full cultural sensitivity.",
+    headline: "Every document is translated with precision and clarity.",
+    body: "Get your documents professionally translated with accuracy and care. From legal papers to everyday forms, every translation is handled with precision, confidentiality, and attention to detail.",
     point1Title: "Built with advanced, certified expertise",
     point1Body:
       "Your translations are handled by native speakers using rigorous review standards. Every word carries accuracy and cultural nuance.",
@@ -45,16 +46,16 @@ const features: FeatureCardData[] = [
       "Document translation preview with professional verification checkmarks",
   },
   {
-    headline: "Understand your progress and act with real confidence.",
-    body: "Get a clear view of your language journey without overcomplicating your workflow. From tracking performance to spotting patterns, everything is designed to help you move forward with clarity.",
-    point1Title: "Clear insights, no more guesswork at all",
+    headline: "Monitor your progress, strengthen your skills, and achieve your learning goals.",
+    body: "See your progress clearly and stay motivated throughout your language journey. From skill development to everyday practice, we help you keep moving forward.",
+    point1Title: "Clear progress insights, so you always know where you stand.",
     point1Body:
       "Understand what's happening at a glance. Focus on what matters most and make informed decisions without getting lost in unnecessary complexity.",
     point2Title: "Track every session in real time easily",
     point2Body:
-      "Stay updated as things evolve. Monitor your progress instantly and keep moving in the right direction.",
+      "Understand your progress at a glance. Focus on the skills that matter most and continue learning with confidence.",
     top: "210px",
-    imagePosition: "left",
+    imagePosition: "left", 
     image: "/choose-us-pictures/third-card (3).jpg",
     imageAlt:
       "Student learning dashboard displaying completed lessons and milestones",

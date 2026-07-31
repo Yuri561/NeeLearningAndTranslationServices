@@ -76,7 +76,7 @@ export const ContactForm = () => {
           </div>
           <h3 className="font-roxborough font-bold text-3xl text-haiti-navy">Message Received!</h3>
           <p className="max-w-md text-sm text-gray-500 leading-relaxed">
-            Mèsi! Thank you for reaching out to Nee's. We've received your request and will contact you via email or phone within the next 24 hours.
+            Mèsi! Thank you for reaching out to Nee's. We've received your request and will contact you via email within the next 24 hours.
           </p>
           <button
             onClick={() => setSubmitSuccess(false)}
@@ -215,7 +215,7 @@ export const ContactForm = () => {
           {/* Note about file uploads */}
           {formState.service === "Translation Services" && (
             <p className="text-[11px] text-gray-500 leading-relaxed text-center mt-2.5">
-              💡 Need to upload documents? Submit this form and we'll reply with a link to upload your files securely, or you can email them to us directly at <a href="mailto:info@neeslearning.com" className="text-haiti-red underline">info@neeslearning.com</a>.
+              💡 Need to upload documents? Submit this form and we'll reply with a link to upload your files securely, or you can email them to us directly at <a href="mailto:Neeslearning@gmail.com" className="text-haiti-red underline">Neeslearning@gmail.com</a>.
             </p>
           )}
         </form>
