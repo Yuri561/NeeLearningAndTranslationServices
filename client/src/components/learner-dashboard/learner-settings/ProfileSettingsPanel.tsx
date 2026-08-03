@@ -25,12 +25,14 @@ import {
   initialsFrom,
   LANGUAGE_OPTIONS,
   MAX_PICTURE_SIZE,
+  safeImageUrl,
 } from "./settings.constants";
 
 type ProfileSettingsPanelProps = {
   user: AuthUser;
   profile: LearnerProfile | null;
   completion: number;
+  onStoredAvatarError: (url: string) => void;
 };
 
 const inputClass =
@@ -40,6 +42,7 @@ export const ProfileSettingsPanel = ({
   user,
   profile,
   completion,
+  onStoredAvatarError,
 }: ProfileSettingsPanelProps) => {
   const updateProfile = useUpdateMyLearnerProfile();
   const uploadPicture = useUploadMyProfilePicture();
@@ -51,6 +54,7 @@ export const ProfileSettingsPanel = ({
     profile?.preferred_language ?? "en"
   );
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
   const [formError, setFormError] = useState("");
 
   useEffect(
@@ -64,7 +68,9 @@ export const ProfileSettingsPanel = ({
     bio !== (profile?.bio ?? "") ||
     learningGoals !== (profile?.learning_goals ?? "") ||
     preferredLanguage !== (profile?.preferred_language ?? "en");
-  const avatarUrl = previewUrl ?? profile?.profile_picture_url;
+  const avatarUrl = previewUrl ?? safeImageUrl(profile?.profile_picture_url);
+  const visibleAvatarUrl =
+    avatarUrl && avatarUrl !== failedAvatarUrl ? avatarUrl : null;
   const picturePending = uploadPicture.isPending || deletePicture.isPending;
 
   const resetForm = () => {
@@ -91,10 +97,32 @@ export const ProfileSettingsPanel = ({
     const localPreview = URL.createObjectURL(file);
     setPreviewUrl(localPreview);
     uploadPicture.mutate(file, {
-      onSuccess: () => {
-        URL.revokeObjectURL(localPreview);
-        setPreviewUrl(null);
-        toast.success("Profile picture updated.");
+      onSuccess: (updatedProfile) => {
+        const storedPictureUrl = safeImageUrl(
+          updatedProfile.profile_picture_url
+        );
+
+        if (!storedPictureUrl) {
+          URL.revokeObjectURL(localPreview);
+          setPreviewUrl(null);
+          toast.error("The server did not return a valid profile-picture URL.");
+          return;
+        }
+
+        const storedPicture = new Image();
+        storedPicture.onload = () => {
+          URL.revokeObjectURL(localPreview);
+          setPreviewUrl(null);
+          toast.success("Profile picture updated.");
+        };
+        storedPicture.onerror = () => {
+          URL.revokeObjectURL(localPreview);
+          setPreviewUrl(null);
+          toast.error(
+            "The upload was accepted, but the stored picture is unavailable. Check the server storage bucket."
+          );
+        };
+        storedPicture.src = storedPictureUrl;
       },
       onError: (error) => {
         URL.revokeObjectURL(localPreview);
@@ -142,10 +170,16 @@ export const ProfileSettingsPanel = ({
       <aside className="bg-slate-50/50 p-6 sm:p-7">
         <div className="flex flex-col items-center text-center">
           <div className="relative group size-28 shrink-0">
-            {avatarUrl ? (
+            {visibleAvatarUrl ? (
               <img
-                src={avatarUrl}
+                src={visibleAvatarUrl}
                 alt={`${user.full_name} profile`}
+                onError={() => {
+                  setFailedAvatarUrl(visibleAvatarUrl);
+                  if (!previewUrl && profile?.profile_picture_url) {
+                    onStoredAvatarError(profile.profile_picture_url);
+                  }
+                }}
                 className="size-full rounded-2xl border-4 border-white object-cover shadow-md transition duration-300 group-hover:shadow-lg"
               />
             ) : (
@@ -186,7 +220,9 @@ export const ProfileSettingsPanel = ({
           <p className="mt-2 text-[0.7rem] font-semibold text-slate-400">
             {completion === 100
               ? "All details completed!"
-              : "Complete bio & learning goals to reach 100%."}
+              : failedAvatarUrl
+                ? "Your saved profile picture could not be loaded."
+                : "Complete bio, learning goals, and photo to reach 100%."}
           </p>
         </div>
 

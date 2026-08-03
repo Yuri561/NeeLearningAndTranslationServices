@@ -53,7 +53,7 @@ export const tutorApi = {
   },
 
   getService: (serviceId: number) =>
-    apiRequest<TutorService>(`/api/v1/services/${serviceId}/`, {}, true),
+    apiRequest<TutorService>(`/api/v1/services/${serviceId}`, {}, true),
 
   createService: (payload: ServicePayload) =>
     apiRequest<TutorService>(
@@ -67,7 +67,7 @@ export const tutorApi = {
 
   updateService: ({ serviceId, payload }: { serviceId: number; payload: ServicePayload }) =>
     apiRequest<TutorService>(
-      `/api/v1/services/${serviceId}/`,
+      `/api/v1/services/${serviceId}`,
       {
         method: "PUT",
         body: JSON.stringify(payload),
@@ -77,7 +77,7 @@ export const tutorApi = {
 
   deleteService: (serviceId: number) =>
     apiRequest<unknown>(
-      `/api/v1/services/${serviceId}/`,
+      `/api/v1/services/${serviceId}`,
       {
         method: "DELETE",
       },
@@ -86,7 +86,7 @@ export const tutorApi = {
 
   getAvailability: (teacherId: number) =>
     apiRequest<TutorAvailability[]>(
-      `/api/v1/availability/teacher/${teacherId}`,
+      `/api/v1/availability/tutor/${teacherId}`,
       {},
       true
     ),
@@ -102,7 +102,7 @@ export const tutorApi = {
 
   updateBookingStatus: ({ bookingId, status }: { bookingId: number; status: string }) =>
     apiRequest<TutorBooking>(
-      `/api/v1/bookings/${bookingId}/status/`,
+      `/api/v1/bookings/${bookingId}/status`,
       {
         method: "PATCH",
         body: JSON.stringify({ status }),

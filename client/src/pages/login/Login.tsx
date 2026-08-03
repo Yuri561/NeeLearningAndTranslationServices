@@ -32,6 +32,9 @@ export const Login = () => {
         return copy;
       });
     }
+    if (loginMutation.error) {
+      loginMutation.reset();
+    }
   };
 
   const validateForm = () => {
@@ -51,6 +54,8 @@ export const Login = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (loginMutation.isPending) return;
+
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -58,7 +63,13 @@ export const Login = () => {
     }
 
     loginMutation.mutate(
-      { credentials: formState, remember: true },
+      {
+        credentials: {
+          email: formState.email.trim(),
+          password: formState.password,
+        },
+        remember: true,
+      },
       {
         onSuccess: (user) => {
           setLoginSuccess(true);

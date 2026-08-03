@@ -22,7 +22,7 @@ export const availabilityApi = {
     teacherId: number | string
   ): Promise<AdminAvailability[]> => {
     const response = await apiRequest<unknown>(
-      `${API_BASE_PATH}/availability/teacher/${encodeURIComponent(String(teacherId))}/`,
+      `${API_BASE_PATH}/availability/tutor/${encodeURIComponent(String(teacherId))}`,
       {},
       true
     );

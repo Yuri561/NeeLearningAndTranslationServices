@@ -1,10 +1,18 @@
-  import { tokenStorage } from "../features/auth/tokenStorage";
+import { tokenStorage } from "../features/auth/tokenStorage";
+
+const DEFAULT_API_URL =
+  "https://neelearningandtranslationservices.onrender.com";
 
 export const API_URL = (
   import.meta.env.VITE_API_URL ??
-  (import.meta.env.DEV
-    ? ""
-    : "https://neelearningandtranslationservices.onrender.com")
+  (import.meta.env.DEV ? "" : DEFAULT_API_URL)
+).replace(/\/$/, "");
+
+// API calls use Vite's proxy in local development, but uploaded files are
+// returned as paths such as `/uploads/avatar.jpg`. Those paths need the real
+// API origin because Vite only proxies `/api`.
+export const API_ASSET_URL = (
+  import.meta.env.VITE_API_URL ?? DEFAULT_API_URL
 ).replace(/\/$/, "");
 
 type ApiErrorBody = {

@@ -95,7 +95,7 @@ export const learnerApi = {
 
   getAvailabilityByTeacher: async (teacherId: number) => {
     const response = await apiRequest<RawAvailabilityByTeacherResponse>(
-      `/api/v1/availability/teacher/${teacherId}`
+      `/api/v1/availability/tutor/${teacherId}`
     );
 
     return normalizeCollection<AvailabilitySlot>(response, [

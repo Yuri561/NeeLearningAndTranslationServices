@@ -45,6 +45,7 @@ export const useLoginMutation = () => {
       }
     },
     onSuccess: (user) => queryClient.setQueryData(authKeys.user, user),
+    retry: false,
   });
 };
 

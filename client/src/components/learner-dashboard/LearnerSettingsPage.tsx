@@ -32,6 +32,7 @@ const tabs = [
 
 export const LearnerSettingsPage = () => {
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
+  const [failedPictureUrl, setFailedPictureUrl] = useState<string | null>(null);
   const userQuery = useCurrentUser();
   const profileQuery = useMyLearnerProfile();
   const user = userQuery.data;
@@ -44,10 +45,11 @@ export const LearnerSettingsPage = () => {
       profile?.bio?.trim(),
       profile?.learning_goals?.trim(),
       profile?.preferred_language,
-      profile?.profile_picture_url,
+      profile?.profile_picture_url &&
+      profile.profile_picture_url !== failedPictureUrl,
     ];
     return Math.round((fields.filter(Boolean).length / fields.length) * 100);
-  }, [profile, user]);
+  }, [failedPictureUrl, profile, user]);
 
   const retry = () => {
     void userQuery.refetch();
@@ -196,6 +198,7 @@ export const LearnerSettingsPage = () => {
               user={user}
               profile={profile ?? null}
               completion={completion}
+              onStoredAvatarError={setFailedPictureUrl}
             />
           ) : (
             <PasswordSettingsPanel user={user} />

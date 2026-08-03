@@ -60,7 +60,6 @@ const toPayload = (values: TutorServiceFormValues): ServicePayload => ({
 });
 
 const statusName = (status?: string) => status?.trim() || "Unknown";
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const isUpcoming = (booking: TutorBooking) => {
   const parsed = Date.parse(`${booking.booking_date}T${booking.end_time}`);
   return Number.isFinite(parsed) && parsed >= Date.now();
@@ -557,4 +556,3 @@ export const TutorAccount = () => (
     roleBadgeLabel="Educator & Tutor"
   />
 );
-

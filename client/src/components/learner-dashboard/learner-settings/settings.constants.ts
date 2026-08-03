@@ -1,3 +1,5 @@
+import { API_ASSET_URL } from "../../../lib/apiClient";
+
 export const MAX_PICTURE_SIZE = 5 * 1024 * 1024;
 
 export const ACCEPTED_PICTURE_TYPES = [
@@ -23,6 +25,20 @@ export const initialsFrom = (name?: string) =>
     .join("")
     .toUpperCase() || "L";
 
+export const safeImageUrl = (value?: string | null) => {
+  const url = value?.trim();
+  if (!url) return null;
+
+  if (/^(blob:|data:image\/)/i.test(url)) return url;
+
+  try {
+    const resolved = new URL(url, `${API_ASSET_URL}/`);
+    return /^(https?:)$/i.test(resolved.protocol) ? resolved.href : null;
+  } catch {
+    return null;
+  }
+};
+
 export const checkPasswordRequirements = (password: string) => {
   return {
     minLength: password.length >= 8,
@@ -32,4 +48,3 @@ export const checkPasswordRequirements = (password: string) => {
     hasSpecial: /[^A-Za-z0-9]/.test(password),
   };
 };
-
