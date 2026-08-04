@@ -49,6 +49,26 @@ const serviceDefaults: TutorServiceFormValues = {
   is_active: true,
 };
 
+const SERVICE_CATEGORY_OPTIONS = [
+  "English",
+  "English-Learning",
+  "Haitian-Creole",
+  "Haitian-Creole Tutoring",
+  "Lingala",
+  "Questions & Answers",
+  "Spanish Tutoring",
+];
+
+const SERVICE_LANGUAGE_OPTIONS = [
+  "English",
+  "Espanol",
+  "Haitian-Creole",
+  "Lingala",
+];
+
+const withCurrentOption = (options: string[], current?: string) =>
+  current && !options.includes(current) ? [current, ...options] : options;
+
 const toPayload = (values: TutorServiceFormValues): ServicePayload => ({
   name: String(values.name).trim(),
   description: String(values.description).trim(),
@@ -156,6 +176,14 @@ const ServiceForm = ({
   const createService = useCreateTutorService(user?.id);
   const updateService = useUpdateTutorService(user?.id);
   const mutation = service ? updateService : createService;
+  const categoryOptions = withCurrentOption(
+    SERVICE_CATEGORY_OPTIONS,
+    service?.category
+  );
+  const languageOptions = withCurrentOption(
+    SERVICE_LANGUAGE_OPTIONS,
+    service?.language
+  );
   const {
     register,
     handleSubmit,
@@ -230,6 +258,22 @@ const ServiceForm = ({
 
       <div className="grid gap-5 md:grid-cols-2">
         <label>
+          <span className="text-xs font-extrabold uppercase tracking-wide text-slate-400">Tutor</span>
+          <select
+            value={user?.id ?? ""}
+            disabled
+            className="mt-2 h-12 w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-100 px-4 text-sm font-semibold text-slate-600 outline-none"
+          >
+            {user ? (
+              <option value={user.id}>
+                {user.full_name} ({user.email})
+              </option>
+            ) : (
+              <option value="">Loading tutor...</option>
+            )}
+          </select>
+        </label>
+        <label>
           <span className="text-xs font-extrabold uppercase tracking-wide text-slate-400">Service name</span>
           <input
             {...register("name")}
@@ -240,20 +284,32 @@ const ServiceForm = ({
         </label>
         <label>
           <span className="text-xs font-extrabold uppercase tracking-wide text-slate-400">Category</span>
-          <input
+          <select
             {...register("category")}
-            className="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-slate-50/60 px-4 text-sm font-semibold text-slate-800 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-haiti-navy focus:bg-white focus:ring-4 focus:ring-blue-100"
-            placeholder="Language learning"
-          />
+            className="mt-2 h-12 w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50/60 px-4 text-sm font-semibold text-slate-800 outline-none transition hover:border-slate-300 focus:border-haiti-navy focus:bg-white focus:ring-4 focus:ring-blue-100"
+          >
+            <option value="">Select a category</option>
+            {categoryOptions.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
           <FieldError message={errors.category?.message} />
         </label>
         <label>
           <span className="text-xs font-extrabold uppercase tracking-wide text-slate-400">Language</span>
-          <input
+          <select
             {...register("language")}
-            className="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-slate-50/60 px-4 text-sm font-semibold text-slate-800 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-haiti-navy focus:bg-white focus:ring-4 focus:ring-blue-100"
-            placeholder="Haitian Creole"
-          />
+            className="mt-2 h-12 w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50/60 px-4 text-sm font-semibold text-slate-800 outline-none transition hover:border-slate-300 focus:border-haiti-navy focus:bg-white focus:ring-4 focus:ring-blue-100"
+          >
+            <option value="">Select a language</option>
+            {languageOptions.map((language) => (
+              <option key={language} value={language}>
+                {language}
+              </option>
+            ))}
+          </select>
           <FieldError message={errors.language?.message} />
         </label>
         <label>
