@@ -39,3 +39,29 @@ class TranslateSnippetResponse(BaseModel):
     script_src: str
     page_language: str
     included_languages: str | None = None
+
+
+# ─── Server-side translation (POST /api/v1/translate/) ──────────────
+
+
+class TranslateRequest(BaseModel):
+    """Payload sent by the frontend to translate one or more strings."""
+    texts: list[str]
+    target: str
+    source: str | None = None          # optional, defaults to auto-detect
+    provider: str | None = None        # reserved for future multi-provider support
+
+
+class TranslationItem(BaseModel):
+    """Result for a single input string."""
+    original: str
+    translated: str
+    provider: str
+    error: str | None = None
+
+
+class TranslateResponse(BaseModel):
+    """Batch translation response — one TranslationItem per input string."""
+    translations: list[TranslationItem]
+    provider: str
+    count: int
