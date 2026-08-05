@@ -17,7 +17,7 @@ export const useTutorServices = (teacherId?: number, email?: string) =>
 
 export const useTutorAvailability = (teacherId?: number) =>
   useQuery({
-    queryKey: tutorKeys.availability(teacherId ?? 0),
+    queryKey: ["tutor-availability", teacherId ?? 0] as const,
     queryFn: () => tutorApi.getAvailability(teacherId!),
     enabled: Boolean(teacherId),
     retry: 1,

@@ -1,6 +1,6 @@
 import { apiRequest } from "../../lib/apiClient";
 import { learnerApi } from "../learner/learnerApi";
-import type { Booking } from "../learner/learnerTypes";
+import type { AvailabilitySlot, Booking } from "../learner/learnerTypes";
 import type {
   AdminUser,
   CreateTutorInput,
@@ -72,5 +72,6 @@ export const adminApi = {
   getUsers: () => apiRequest<AdminUser[]>("/api/v1/users/", {}, true),
   getBookings: () => apiRequest<Booking[]>("/api/v1/bookings/", {}, true),
   getServices: learnerApi.getServices,
-  getAvailability: learnerApi.getAvailability,
+  getAvailability: () =>
+    apiRequest<AvailabilitySlot[]>("/api/v1/availability/", {}, true),
 };

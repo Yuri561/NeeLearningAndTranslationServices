@@ -90,12 +90,11 @@ export const learnerApi = {
     return services.map(normalizeLearningService);
   },
 
-  getAvailability: () =>
-    apiRequest<AvailabilitySlot[]>("/api/v1/availability/"),
-
   getAvailabilityByTeacher: async (teacherId: number) => {
     const response = await apiRequest<RawAvailabilityByTeacherResponse>(
-      `/api/v1/availability/tutor/${teacherId}`
+      `/api/v1/availability/tutor/${teacherId}`,
+      {},
+      true
     );
 
     return normalizeCollection<AvailabilitySlot>(response, [
@@ -105,7 +104,7 @@ export const learnerApi = {
   },
 
   getAvailabilityById: (availabilityId: number) =>
-    apiRequest<AvailabilitySlot>(`/api/v1/availability/${availabilityId}`),
+    apiRequest<AvailabilitySlot>(`/api/v1/availability/${availabilityId}`, {}, true),
 
   getSupportedLanguages: () =>
     apiRequest<SupportedLanguagesResponse>("/api/v1/translate/languages"),

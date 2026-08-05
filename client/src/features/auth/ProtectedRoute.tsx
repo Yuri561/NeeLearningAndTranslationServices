@@ -5,7 +5,7 @@ import { tokenStorage } from "./tokenStorage";
 import type { UserRole } from "./authTypes";
 
 type ProtectedRouteProps = {
-  allowedRole: UserRole;
+  allowedRole: UserRole | UserRole[];
 };
 
 export const ProtectedRoute = ({ allowedRole }: ProtectedRouteProps) => {
@@ -32,7 +32,8 @@ export const ProtectedRoute = ({ allowedRole }: ProtectedRouteProps) => {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  if (user.role !== allowedRole) {
+  const allowedRoles = Array.isArray(allowedRole) ? allowedRole : [allowedRole];
+  if (!allowedRoles.includes(user.role)) {
     return <Navigate to={dashboardPathByRole[user.role]} replace />;
   }
 

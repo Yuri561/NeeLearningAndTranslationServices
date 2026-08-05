@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   FiArrowRight,
   FiBookOpen,
@@ -14,8 +14,8 @@ import {
   FiX,
 } from "react-icons/fi";
 import {
-  useLearnerAvailability,
   useLearningServices,
+  useTeacherAvailability,
 } from "../../features/learner/learnerQueries";
 import type {
   AvailabilitySlot,
@@ -222,12 +222,18 @@ const AvailabilityDetails = ({
 
 export const LearnerAvailabilityPage = () => {
   const servicesQuery = useLearningServices();
-  const availabilityQuery = useLearnerAvailability();
+  const { tutorId: routeTutorId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [teacherFilter, setTeacherFilter] = useState("");
+  const teacherFilter = routeTutorId ?? searchParams.get("tutorId") ?? "";
   const [dayFilter, setDayFilter] = useState("all");
   const [selected, setSelected] = useState<AvailabilitySlot | null>(null);
   const [bookingAvailability, setBookingAvailability] = useState<AvailabilitySlot | null>(null);
+  const parsedTutorId = Number(teacherFilter);
+  const selectedTutorId = Number.isInteger(parsedTutorId) && parsedTutorId > 0
+    ? parsedTutorId
+    : null;
+  const tutorAvailabilityQuery = useTeacherAvailability(selectedTutorId);
 
   const today = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(new Date());
 
@@ -242,30 +248,23 @@ export const LearnerAvailabilityPage = () => {
     return map;
   }, [servicesQuery.data]);
 
-  // All active availability slots
+  // Learners only receive active slots from the selected tutor-specific query.
   const allActiveSlots = useMemo(
-    () => (availabilityQuery.data ?? []).filter((s) => s.is_active),
-    [availabilityQuery.data],
+    () => (tutorAvailabilityQuery.data ?? [])
+      .filter((slot) => slot.is_active)
+      .map((slot) => ({ ...slot, teacher_id: selectedTutorId })),
+    [selectedTutorId, tutorAvailabilityQuery.data],
   );
 
-  // Build sorted list of tutors who actually have active availability.
-  // Falls back to "Tutor #ID" for tutors not found in the services list.
+  // Tutor choices come from real service/tutor records. Selecting one switches
+  // the data source to GET /availability/tutor/{id}.
   const tutorOptions = useMemo(() => {
-    const ids = new Set(allActiveSlots.map((s) => s.teacher_id).filter(Boolean) as number[]);
-    const options: { id: number; name: string }[] = [];
-    ids.forEach((id) => {
-      const name = tutorMap.get(id) ?? `Tutor #${id}`;
-      options.push({ id, name });
-    });
-    return options.sort((a, b) => a.name.localeCompare(b.name));
-  }, [allActiveSlots, tutorMap]);
+    return [...tutorMap.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [tutorMap]);
 
-  // Slots filtered by selected teacher (or all if no teacher selected)
-  const filteredSlots = useMemo(() => {
-    if (!teacherFilter) return allActiveSlots;
-    const filterId = Number(teacherFilter);
-    return allActiveSlots.filter((s) => s.teacher_id === filterId);
-  }, [allActiveSlots, teacherFilter]);
+  const filteredSlots = allActiveSlots;
 
   // Group filtered slots by day
   const grouped = useMemo(() => {
@@ -280,8 +279,11 @@ export const LearnerAvailabilityPage = () => {
     (day) => grouped.has(day) && (dayFilter === "all" || day === dayFilter),
   );
 
-  const selectedTutor = teacherFilter
-    ? tutorOptions.find((t) => t.id === Number(teacherFilter))
+  const selectedTutor = selectedTutorId
+    ? tutorOptions.find((t) => t.id === selectedTutorId) ?? {
+        id: selectedTutorId,
+        name: `Tutor #${selectedTutorId}`,
+      }
     : null;
 
   // Services for the booking modal — scoped to the slot's tutor when known
@@ -307,10 +309,10 @@ export const LearnerAvailabilityPage = () => {
             <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-200"><FiSun /> Plan your learning</p>
             <h1 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">Tutor Availability</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100">
-              Browse all available tutoring slots across every teacher. Use the filter below to narrow down by tutor name.
+              Choose a tutor to view only that tutor&apos;s active weekly availability.
             </p>
           </div>
-          {!availabilityQuery.isLoading && !availabilityQuery.isError && (
+          {selectedTutorId && !tutorAvailabilityQuery.isLoading && !tutorAvailabilityQuery.isError && (
             <div className="flex gap-3">
               <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
                 <p className="text-2xl font-extrabold">{filteredSlots.length}</p>
@@ -332,13 +334,13 @@ export const LearnerAvailabilityPage = () => {
           <span>
             {selectedTutor
               ? <><strong className="text-slate-800">{selectedTutor.name}</strong> &middot; Showing their availability</>
-              : <><strong className="text-slate-800">All tutors</strong> &middot; Times shown in your local time format</>
+              : <><strong className="text-slate-800">Choose a tutor</strong> &middot; Times are shown in your local timezone</>
             }
           </span>
-          {selectedTutor && (
+          {selectedTutor && !routeTutorId && (
             <button
               type="button"
-              onClick={() => { setTeacherFilter(""); setDayFilter("all"); setSelected(null); }}
+              onClick={() => { setSearchParams({}); setDayFilter("all"); setSelected(null); }}
               className="ml-1 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-500 transition hover:bg-red-50 hover:text-haiti-red"
               aria-label="Clear teacher filter"
             >
@@ -355,14 +357,18 @@ export const LearnerAvailabilityPage = () => {
             <select
               id="teacher-filter"
               value={teacherFilter}
+              disabled={Boolean(routeTutorId)}
               onChange={(e) => {
-                setTeacherFilter(e.target.value);
+                setSearchParams(e.target.value ? { tutorId: e.target.value } : {});
                 setDayFilter("all");
                 setSelected(null);
               }}
               className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-10 text-sm font-bold text-slate-700 outline-none transition hover:border-slate-300 focus:border-haiti-navy focus:ring-4 focus:ring-blue-100 sm:w-56"
             >
-              <option value="">All teachers</option>
+              <option value="">Select a teacher</option>
+              {selectedTutor && !tutorOptions.some(({ id }) => id === selectedTutor.id) ? (
+                <option value={selectedTutor.id}>{selectedTutor.name}</option>
+              ) : null}
               {tutorOptions.map(({ id, name }) => (
                 <option key={id} value={id}>{name}</option>
               ))}
@@ -390,35 +396,35 @@ export const LearnerAvailabilityPage = () => {
       </div>
 
       {/* Loading skeleton */}
-      {availabilityQuery.isLoading && (
+      {selectedTutorId && tutorAvailabilityQuery.isLoading && (
         <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3" aria-label="Loading availability">
           {Array.from({ length: 6 }, (_, i) => <AvailabilitySkeleton key={i} />)}
         </div>
       )}
 
       {/* Error state */}
-      {availabilityQuery.isError && (
+      {selectedTutorId && tutorAvailabilityQuery.isError && (
         <div className="mt-8 grid min-h-72 place-items-center rounded-3xl border border-red-100 bg-white p-8 text-center">
           <div>
             <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-red-50 text-haiti-red"><FiRefreshCw className="size-5" /></span>
             <h2 className="mt-4 text-lg font-extrabold text-slate-900">We couldn&apos;t load availability</h2>
             <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-              {availabilityQuery.error instanceof Error ? availabilityQuery.error.message : "Please check your connection and try again."}
+              We could not load this availability. Please check your connection and try again.
             </p>
             <button
               type="button"
-              onClick={() => availabilityQuery.refetch()}
-              disabled={availabilityQuery.isFetching}
+              onClick={() => tutorAvailabilityQuery.refetch()}
+              disabled={tutorAvailabilityQuery.isFetching}
               className="mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-haiti-navy px-5 text-sm font-bold text-white transition hover:bg-haiti-navy-dark disabled:opacity-60"
             >
-              <FiRefreshCw className={availabilityQuery.isFetching ? "animate-spin" : ""} /> Try again
+              <FiRefreshCw className={tutorAvailabilityQuery.isFetching ? "animate-spin" : ""} /> Try again
             </button>
           </div>
         </div>
       )}
 
       {/* Availability grid */}
-      {!availabilityQuery.isLoading && !availabilityQuery.isError && visibleDays.length > 0 && (
+      {selectedTutorId && !tutorAvailabilityQuery.isLoading && !tutorAvailabilityQuery.isError && visibleDays.length > 0 && (
         <div className="mt-8 grid items-start gap-5 md:grid-cols-2 xl:grid-cols-3">
           {visibleDays.map((day) => (
             <DayCard
@@ -434,7 +440,7 @@ export const LearnerAvailabilityPage = () => {
       )}
 
       {/* Empty state */}
-      {!availabilityQuery.isLoading && !availabilityQuery.isError && visibleDays.length === 0 && (
+      {!tutorAvailabilityQuery.isLoading && !tutorAvailabilityQuery.isError && visibleDays.length === 0 && (
         <div className="mt-8 grid min-h-72 place-items-center rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center">
           <div>
             <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-blue-50 text-haiti-navy">
@@ -443,16 +449,16 @@ export const LearnerAvailabilityPage = () => {
             <h2 className="mt-4 text-lg font-extrabold text-slate-900">
               {filteredSlots.length
                 ? `No active times on ${dayFilter}`
-                : teacherFilter
+                : selectedTutorId
                   ? "No availability for this teacher yet"
-                  : "No availability available yet"}
+                  : "Select a tutor to view availability"}
             </h2>
             <p className="mt-2 text-sm text-slate-500">
               {filteredSlots.length
                 ? "Choose another day to explore the weekly schedule."
-                : teacherFilter
+                : selectedTutorId
                   ? "Try selecting a different teacher or check back soon."
-                  : "New availability will appear here once tutors set their schedules."}
+                  : "Choose a tutor above to load their active weekly schedule."}
             </p>
             {dayFilter !== "all" && (
               <button
@@ -488,4 +494,3 @@ export const LearnerAvailabilityPage = () => {
     </section>
   );
 };
-

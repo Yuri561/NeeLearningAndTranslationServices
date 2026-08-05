@@ -89,11 +89,6 @@ export const useGoogleAuthorizationMutation = () =>
     },
   });
 
-export const useChangePasswordMutation = () =>
-  useMutation({
-    mutationFn: authApi.changePassword,
-  });
-
 export const useGoogleCallbackMutation = () => {
   const queryClient = useQueryClient();
 

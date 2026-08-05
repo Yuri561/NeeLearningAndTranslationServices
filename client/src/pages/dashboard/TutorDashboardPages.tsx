@@ -38,6 +38,7 @@ import {
   type DataTableColumn,
 } from "../../components/ui/adminUi";
 import { formatValue, getErrorMessage } from "../../components/ui/adminFormat";
+import { TutorAvailabilityPage } from "../../features/availability/components/TutorAvailabilityPage";
 
 const serviceDefaults: TutorServiceFormValues = {
   name: "",
@@ -375,8 +376,9 @@ const ServiceForm = ({
 
 export const TutorOverview = () => {
   const { data: user, isPending: isUserPending } = useCurrentUser();
+  const tutorId = user?.tutor_id ?? user?.id;
   const services = useTutorServices(user?.id, user?.email);
-  const availability = useTutorAvailability(user?.id);
+  const availability = useTutorAvailability(tutorId);
   const bookings = useTutorBookings(user?.id);
   const serviceData = services.data ?? [];
   const bookingData = bookings.data ?? [];
@@ -475,36 +477,7 @@ export const TutorServices = () => {
   );
 };
 
-export const TutorAvailability = () => {
-  const { data: user } = useCurrentUser();
-  const query = useTutorAvailability(user?.id);
-  const items = query.data ?? [];
-  return (
-    <section className="space-y-6">
-      <AdminSectionHeader
-        eyebrow="Tutor workspace"
-        title="My Availability"
-        description="Read your availability slots from the backend. Create/update availability requires the exact bulk payload schema, so mutation controls stay disabled until confirmed."
-      />
-      {query.isLoading ? <LoadingSkeleton rows={5} /> : null}
-      {query.isError ? <ErrorState message={getErrorMessage(query.error)} onRetry={() => query.refetch()} /> : null}
-      {!query.isLoading && !query.isError ? (
-        <DataTable
-          items={items}
-          getKey={(item) => item.id}
-          empty={<EmptyState title="No availability slots" description="Availability will appear here after slots are created." />}
-          columns={[
-            { key: "id", header: "ID", render: (item) => `#${item.id}` },
-            { key: "day", header: "Day/Date", render: (item) => formatValue(item.day ?? item.date ?? item.booking_date) },
-            { key: "start", header: "Start", render: (item) => item.start_time },
-            { key: "end", header: "End", render: (item) => item.end_time },
-            { key: "state", header: "State", render: (item) => <StatusBadge status={item.is_active} /> },
-          ]}
-        />
-      ) : null}
-    </section>
-  );
-};
+export const TutorAvailability = TutorAvailabilityPage;
 
 const TutorBookingList = ({
   title,

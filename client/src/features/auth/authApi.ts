@@ -2,8 +2,6 @@ import { apiRequest } from "../../lib/apiClient";
 import type {
   AuthToken,
   AuthUser,
-  ChangePasswordInput,
-  ChangePasswordResult,
   GoogleAuthorization,
   LoginInput,
   RegisterInput,
@@ -12,6 +10,7 @@ import type {
 type AuthUserRecord = Partial<AuthUser> & {
   fullName?: unknown;
   name?: unknown;
+  teacher_id?: unknown;
 };
 
 const text = (value: unknown, fallback = "") =>
@@ -19,9 +18,11 @@ const text = (value: unknown, fallback = "") =>
 
 const normalizeAuthUser = (value: unknown): AuthUser => {
   const record = value && typeof value === "object" ? (value as AuthUserRecord) : {};
+  const tutorId = Number(record.tutor_id ?? record.teacher_id);
 
   return {
     id: Number(record.id ?? 0),
+    tutor_id: Number.isFinite(tutorId) && tutorId > 0 ? tutorId : null,
     email: text(record.email),
     full_name: text(record.full_name ?? record.fullName ?? record.name),
     role: record.role ?? "learner",
@@ -55,21 +56,6 @@ export const authApi = {
     ),
 
   getMe: () => apiRequest<unknown>("/api/v1/auth/me", {}, true).then(normalizeAuthUser),
-
-  changePassword: async (input: ChangePasswordInput): Promise<ChangePasswordResult> => {
-    const response = await apiRequest<string | ChangePasswordResult>(
-      "/api/v1/auth/change-password",
-      {
-        method: "POST",
-        body: JSON.stringify(input),
-      },
-      true
-    );
-
-    return typeof response === "string"
-      ? { message: response }
-      : { message: response?.message ?? "Password changed successfully" };
-  },
 
   getGoogleAuthorization: () =>
     apiRequest<GoogleAuthorization>("/api/v1/auth/google/login"),

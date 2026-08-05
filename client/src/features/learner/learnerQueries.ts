@@ -1,6 +1,7 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "../../lib/apiClient";
 import { learnerApi } from "./learnerApi";
+import { toLocalAvailability } from "../availability/availability.utils";
 import type { Booking, LearnerProfile } from "./learnerTypes";
 
 export const learnerKeys = {
@@ -8,7 +9,7 @@ export const learnerKeys = {
   services: ["learner", "services"] as const,
   availability: ["learner", "availability"] as const,
   teacherAvailability: (teacherId: number) =>
-    ["learner", "availability", "teacher", teacherId] as const,
+    ["tutor-availability", teacherId] as const,
   availabilityDetail: (availabilityId: number) =>
     ["learner", "availability", availabilityId] as const,
   translationLanguages: ["learner", "translation", "languages"] as const,
@@ -136,17 +137,11 @@ export const useDeleteMyProfilePicture = () => {
   });
 };
 
-export const useLearnerAvailability = () =>
-  useQuery({
-    queryKey: learnerKeys.availability,
-    queryFn: learnerApi.getAvailability,
-    staleTime: 5 * 60_000,
-  });
-
 export const useTeacherAvailability = (teacherId?: number | null) =>
   useQuery({
     queryKey: learnerKeys.teacherAvailability(teacherId ?? 0),
     queryFn: () => learnerApi.getAvailabilityByTeacher(teacherId!),
+    select: (slots) => slots.map(toLocalAvailability),
     enabled: Boolean(teacherId),
     staleTime: 5 * 60_000,
   });

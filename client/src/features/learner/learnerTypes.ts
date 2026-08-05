@@ -1,3 +1,5 @@
+import type { WeekDay } from "../availability/availability.types";
+
 export type Booking = {
   id: number;
   learner_id?: number;
@@ -57,7 +59,7 @@ export type LearningServiceWithTutor = LearningService & {
 
 export type AvailabilitySlot = {
   id: number;
-  day: string;
+  day: WeekDay;
   start_time: string;
   end_time: string;
   is_active: boolean;

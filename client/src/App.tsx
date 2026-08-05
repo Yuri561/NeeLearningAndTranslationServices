@@ -6,6 +6,9 @@ import NotFound from "./pages/not-found/NotFound";
 import Login from "./pages/login/Login";
 import Register from "./pages/register/Register";
 import GoogleCallback from "./pages/auth/GoogleCallback";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
+import AccountSecurity from "./pages/auth/AccountSecurity";
 import TutorDashboard, {
   TutorAccount,
   TutorAvailability,
@@ -46,6 +49,11 @@ function App() {
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
         <Route path="auth/google/callback" element={<GoogleCallback />} />
+        <Route path="forgot-password" element={<ForgotPassword />} />
+        <Route path="reset-password" element={<ResetPassword />} />
+        <Route element={<ProtectedRoute allowedRole={["learner", "tutor"]} />}>
+          <Route path="account/security" element={<AccountSecurity />} />
+        </Route>
         <Route element={<ProtectedRoute allowedRole="learner" />}>
           <Route path="dashboard/learner" element={<LearnerDashboard />}>
             <Route index element={<LearnerOverview />} />
@@ -55,6 +63,7 @@ function App() {
             <Route path="bookings/history" element={<LearnerBooking />} />
             <Route path="booking" element={<LearnerBooking />} />
             <Route path="availability" element={<LearnerAvailability />} />
+            <Route path="availability/:tutorId" element={<LearnerAvailability />} />
             <Route path="files" element={<LearnerFiles />} />
             <Route path="translation" element={<LearnerFiles />} />
             <Route path="settings" element={<LearnerSettings />} />

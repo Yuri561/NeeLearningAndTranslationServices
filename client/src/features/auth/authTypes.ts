@@ -2,6 +2,7 @@ export type UserRole = "admin" | "tutor" | "learner";
 
 export type AuthUser = {
   id: number;
+  tutor_id?: number | null;
   email: string;
   full_name: string;
   role: UserRole;
@@ -27,13 +28,4 @@ export type RegisterInput = LoginInput & {
 
 export type GoogleAuthorization = {
   authorization_url: string;
-};
-
-export type ChangePasswordInput = {
-  current_password: string;
-  new_password: string;
-};
-
-export type ChangePasswordResult = {
-  message: string;
 };

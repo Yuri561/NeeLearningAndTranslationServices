@@ -10,9 +10,10 @@ import {
   FiShield,
   FiX,
 } from "react-icons/fi";
-import { useChangePasswordMutation } from "../../../features/auth/authQueries";
+import { getPasswordErrorMessage } from "../../../features/password-management/password.errors";
+import { useChangePasswordMutation } from "../../../features/password-management/password.queries";
+import { changePasswordSchema } from "../../../features/password-management/password.schemas";
 import type { AuthUser } from "../../../features/auth/authTypes";
-import { getErrorMessage } from "../../ui/adminFormat";
 import { checkPasswordRequirements } from "./settings.constants";
 
 type PasswordSettingsPanelProps = {
@@ -86,7 +87,7 @@ export const PasswordSettingsPanel = ({ user }: PasswordSettingsPanelProps) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [visibleField, setVisibleField] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const isGoogleAccount = user.auth_provider?.toLowerCase() === "google";
+  const isGoogleAccount = user.auth_provider?.toLowerCase().includes("google");
 
   const reqs = useMemo(() => checkPasswordRequirements(newPassword), [newPassword]);
 
@@ -109,44 +110,38 @@ export const PasswordSettingsPanel = ({ user }: PasswordSettingsPanelProps) => {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    const nextErrors: Record<string, string> = {};
-
-    if (!currentPassword) nextErrors.current = "Enter your current password.";
-    if (!newPassword) {
-      nextErrors.new = "Enter a new password.";
-    } else {
-      const unmet: string[] = [];
-      if (!reqs.minLength) unmet.push("8 characters");
-      if (!reqs.hasUppercase) unmet.push("an uppercase letter");
-      if (!reqs.hasLowercase) unmet.push("a lowercase letter");
-      if (!reqs.hasNumber) unmet.push("a number");
-      if (!reqs.hasSpecial) unmet.push("a special character");
-      if (unmet.length) nextErrors.new = `Password must include: ${unmet.join(", ")}.`;
-    }
-
-    if (currentPassword && currentPassword === newPassword) {
-      nextErrors.new = "New password must be different from your current password.";
-    }
-
-    if (!confirmPassword) {
-      nextErrors.confirm = "Confirm your new password.";
-    } else if (confirmPassword !== newPassword) {
-      nextErrors.confirm = "Passwords do not match.";
-    }
-
-    if (Object.keys(nextErrors).length) {
+    if (changePassword.isPending || isGoogleAccount) return;
+    const parsed = changePasswordSchema.safeParse({
+      currentPassword,
+      newPassword,
+      confirmPassword,
+    });
+    if (!parsed.success) {
+      const fieldMap: Record<string, string> = {
+        currentPassword: "current",
+        newPassword: "new",
+        confirmPassword: "confirm",
+      };
+      const nextErrors: Record<string, string> = {};
+      parsed.error.issues.forEach((issue) => {
+        const field = fieldMap[String(issue.path[0])] ?? "form";
+        nextErrors[field] ??= issue.message;
+      });
       setErrors(nextErrors);
       return;
     }
 
     changePassword.mutate(
-      { current_password: currentPassword, new_password: newPassword },
       {
-        onSuccess: ({ message }) => {
+        current_password: parsed.data.currentPassword,
+        new_password: parsed.data.newPassword,
+      },
+      {
+        onSuccess: () => {
           clearForm();
-          toast.success(message || "Password updated successfully.");
+          toast.success("Your password has been changed successfully.");
         },
-        onError: (error) => toast.error(getErrorMessage(error)),
+        onError: (error) => toast.error(getPasswordErrorMessage(error, "change")),
       }
     );
   };
@@ -162,7 +157,7 @@ export const PasswordSettingsPanel = ({ user }: PasswordSettingsPanelProps) => {
             Google Authentication Managed
           </h2>
           <p className="mt-2 text-sm font-medium leading-6 text-slate-500">
-            You signed in using your Google Account ({user.email}). Password settings are securely managed by Google.
+            Your account uses Google sign-in. Password changes must be managed through Google.
           </p>
           <div className="mt-6 inline-flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2 text-xs font-extrabold text-slate-600">
             <FiLock className="size-3.5 text-slate-500" /> Third-party OAuth Active
