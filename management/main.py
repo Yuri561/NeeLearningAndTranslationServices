@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-
+from routes.payment_routes import router as payment_router
 from routes import (
     auth,
     availability,
@@ -76,7 +76,7 @@ app.include_router(
     prefix="/api/v1/lesson-history",
     tags=["Lesson History"],
 )
-
+app.include_router(payment_router)
 
 @app.get("/")
 def home():

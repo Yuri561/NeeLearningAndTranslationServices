@@ -136,7 +136,7 @@ def update_service(
     service_id: int,
     updated_service: ServiceCreate,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db)
 ):
     db_service = db.get(Service, service_id)
     if not db_service:

@@ -35,7 +35,7 @@ from enums.enums import UserRole
 router = APIRouter()
 
 
-# ─── Constants ──────────────────────────────────────────────────────
+# ─── Constants 
 BUCKET_NAME = "uploads"
 PROFILE_PIC_FOLDER = "profile_pictures/tutors"
 ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
@@ -55,14 +55,14 @@ def _storage_path_from_url(public_url: str) -> str | None:
         return None
 
 
-# ─── Get all tutor profiles ─────────────────────────────────────────
+# ─── Get all tutor profiles 
 @router.get("/", response_model=list[TutorProfileResponse])
 def get_all_tutor_profiles(db: Session = Depends(get_db)):
     profiles = db.execute(select(TutorProfile)).scalars().all()
     return profiles
 
 
-# ─── Get own tutor profile ──────────────────────────────────────────
+# ─── Get own tutor profile 
 @router.get("/me", response_model=TutorProfileResponse)
 def get_my_tutor_profile(
     current_user: User = Depends(get_current_user),
@@ -80,7 +80,7 @@ def get_my_tutor_profile(
     return profile
 
 
-# ─── Get tutor profile by user ID ───────────────────────────────────
+# ─── Get tutor profile by user ID 
 @router.get("/{user_id}", response_model=TutorProfileResponse)
 def get_tutor_profile_by_user_id(user_id: int, db: Session = Depends(get_db)):
     profile = db.execute(
@@ -92,7 +92,7 @@ def get_tutor_profile_by_user_id(user_id: int, db: Session = Depends(get_db)):
     return profile
 
 
-# ─── Update own tutor profile ───────────────────────────────────────
+# ─── Update own tutor profile 
 @router.put("/me", response_model=TutorProfileResponse)
 def update_my_tutor_profile(
     updates: TutorProfileUpdate,
@@ -118,7 +118,7 @@ def update_my_tutor_profile(
     return profile
 
 
-# ─── Upload / replace own profile picture ───────────────────────────
+# ─── Upload / replace own profile picture 
 @router.post("/me/profile-picture", response_model=TutorProfileResponse)
 async def upload_tutor_profile_picture(
     file: UploadFile = File(...),
@@ -167,7 +167,7 @@ async def upload_tutor_profile_picture(
 
     public_url = supabase_config.storage.from_(BUCKET_NAME).get_public_url(storage_path)
 
-    # remove the old picture from storage (best-effort)
+    # remove the old picture from storage 
     old_url = profile.profile_picture_url
     if old_url:
         old_path = _storage_path_from_url(old_url)
@@ -183,11 +183,11 @@ async def upload_tutor_profile_picture(
     return profile
 
 
-# ─── Delete own profile picture ─────────────────────────────────────
+# ─── Delete own profile picture
 @router.delete("/me/profile-picture", response_model=TutorProfileResponse)
 def delete_tutor_profile_picture(
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db)
 ):
     if current_user.role not in [UserRole.TUTOR, UserRole.ADMIN]:
         raise HTTPException(status_code=403, detail="Only tutors can delete a tutor profile picture")
