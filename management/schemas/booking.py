@@ -22,4 +22,3 @@ class BookingResponse(BookingCreate):
     
     class Config:
         from_attributes = True
-    

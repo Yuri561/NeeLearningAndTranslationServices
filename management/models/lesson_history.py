@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------------
 # Tracks completed, cancelled, or no-show lesson sessions.
 # One record is created per lesson that has ended.
-# Links to the student, teacher, and the original booking.
+# Links to the learner, tutor, and the original booking.
 # ============================================================================
 
 from sqlalchemy.orm import  Mapped, mapped_column
@@ -31,7 +31,7 @@ class LessonHistory(Base):
     status: Mapped[LessonStatus] = mapped_column(String(20))
     learner_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     tutor_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    student_rating: Mapped[int | None] = mapped_column(nullable=True)  # 1–5
+    learner_rating: Mapped[int | None] = mapped_column(nullable=True)  # 1–5
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
 

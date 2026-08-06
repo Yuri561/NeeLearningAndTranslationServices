@@ -3,7 +3,7 @@
 # ============================================================================
 # AVAILABILITY MANAGEMENT API
 # ----------------------------------------------------------------------------
-# Administrative endpoints for managing teacher availability schedules.
+# Administrative endpoints for managing tutor availability schedules.
 #
 # Features:
 # - Create availability slots
@@ -14,7 +14,8 @@
 #
 # Endpoints:
 # - GET    /availability
-# - POST   /availability
+# - POST   /availability/bulk
+# - GET    /availability/tutor/{tutor_id}
 # - GET    /availability/{availability_id}
 # - PUT    /availability/{availability_id}
 # - DELETE /availability/{availability_id}
@@ -35,8 +36,7 @@ router = APIRouter()
 
 #get all availability
 @router.get("/", response_model=list[AvailabilityResponse])
-
-def get_all_availability( db:Session=Depends(get_db)):
+def get_all_availability(db: Session = Depends(get_db)):
     query = select(Availability) #select availability table
     result = db.execute(query)
     availability_service = result.scalars().all()
@@ -45,13 +45,13 @@ def get_all_availability( db:Session=Depends(get_db)):
 # ============================================================================
 # CREATE AVAILABILITY SLOTS (BULK)
 # ----------------------------------------------------------------------------
-# Creates one or more availability records for a teacher.
-# Used when a teacher/admin wants to add multiple available time slots at once.
+# Creates one or more availability records for a tutor.
+# Used when a tutor/admin wants to add multiple available time slots at once.
 # ============================================================================
     
 #create availability by list
 @router.post("/bulk", response_model=list[AvailabilityResponse])
-def create_availability(availability: list[AvailabilityCreate], current_user: User = Depends(get_current_user), db:Session=Depends(get_db)):
+def create_availability(availability: list[AvailabilityCreate], current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     
     if current_user.role not in ["tutor", "admin"]:
         raise HTTPException(status_code=403, detail="Only tutors and admins can create availability.")
@@ -59,11 +59,11 @@ def create_availability(availability: list[AvailabilityCreate], current_user: Us
     
     for avail in availability:
         new_avail = Availability(
-            tutor_id = current_user.id,
-            start_time = avail.start_time,
-            end_time = avail.end_time,
-            day = avail.day,
-            is_active = avail.is_active
+            tutor_id=current_user.id,
+            start_time=avail.start_time,
+            end_time=avail.end_time,
+            day=avail.day,
+            is_active=avail.is_active,
         )
     
         avail_lst.append(new_avail)
@@ -75,38 +75,35 @@ def create_availability(availability: list[AvailabilityCreate], current_user: Us
 
 
 # ============================================================================
-# TEACHER AVAILABILITY DASHBOARD API
+# TUTOR AVAILABILITY DASHBOARD API
 # ----------------------------------------------------------------------------
-# Retrieves all available time slots for a specific teacher.
-# Used by students during booking and by teachers managing their schedule.
+# Retrieves all available time slots for a specific tutor.
+# Used by learners during booking and by tutors managing their schedule.
 # ============================================================================
 
-@router.get("/teacher/{tutor_id}", response_model=list[AvailabilityResponse])
-def get_teacher_avail(tutor_id:int, db:Session = Depends(get_db)):
-    teacher_avail = select(Availability).where(Availability.tutor_id == tutor_id)
-    results = db.scalars(teacher_avail).all()
+@router.get("/tutor/{tutor_id}", response_model=list[AvailabilityResponse])
+def get_tutor_avail(tutor_id: int, db: Session = Depends(get_db)):
+    tutor_avail = select(Availability).where(Availability.tutor_id == tutor_id)
+    results = db.scalars(tutor_avail).all()
     return results
-
-
 
 
 #get availability by ID
 @router.get("/{availability_id}", response_model=AvailabilityResponse)
-def get_availability_by_id(availability_id: int, db:Session = Depends(get_db)):
+def get_availability_by_id(availability_id: int, db: Session = Depends(get_db)):
     search = db.get(Availability, availability_id)
     if not search:
         raise HTTPException(status_code=404, detail="unable to locate availability id")
     return search
     
     
-    
 #update availability 
 @router.put("/{availability_id}", response_model=AvailabilityResponse)
-def update_availabilty(availability_id:int, updated_availability:AvailabilityCreate, current_user: User = Depends(get_current_user), db:Session = Depends(get_db)):
+def update_availabilty(availability_id: int, updated_availability: AvailabilityCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     
     avail_service = db.get(Availability, availability_id)
     if not avail_service:
-        raise HTTPException(status_code= 404, detail="unable to find availability id please try again")
+        raise HTTPException(status_code=404, detail="unable to find availability id please try again")
     if current_user.role != "admin" and avail_service.tutor_id != current_user.id:
         raise HTTPException(status_code=403, detail="You can only update your own availability.")
     avail_dict = updated_availability.model_dump()
@@ -121,21 +118,18 @@ def update_availabilty(availability_id:int, updated_availability:AvailabilityCre
 # AVAILABILITY RECORD MANAGEMENT
 # ----------------------------------------------------------------------------
 # Retrieves, updates, and deletes individual availability records by ID.
-# These endpoints are used for admin/teacher schedule management.
+# These endpoints are used for admin/tutor schedule management.
 # ============================================================================
 
 #delete availability by ID
 @router.delete("/{availability_id}")
-def delete_availability(availability_id:int, current_user: User = Depends(get_current_user), db:Session = Depends(get_db)):
-    
+def delete_availability(availability_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     
     search_avail = db.get(Availability, availability_id)
     if not search_avail:
-        raise HTTPException(status_code= 404, detail="unable to delete availability id please try again")
+        raise HTTPException(status_code=404, detail="unable to delete availability id please try again")
     if current_user.role != "admin" and search_avail.tutor_id != current_user.id:
         raise HTTPException(status_code=403, detail="You can only delete your own availability.")
     db.delete(search_avail)
     db.commit()
-    return {"message": "Availability successfully deleted. "}
-
-
+    return {"message": "Availability successfully deleted."}

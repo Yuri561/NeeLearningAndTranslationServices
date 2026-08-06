@@ -4,7 +4,7 @@
 #                                                                     #
 #        OAuth 2.0 authorization code flow.                          #
 #        New Google users are created as learners and get a          #
-#        student profile row automatically.                          #
+#        learner profile row automatically.                          #
 #                                                                     #
 #        - GET /google/login    → return Google consent URL          #
 #        - GET /google/callback → exchange code, return JWT          #
@@ -18,10 +18,11 @@ from sqlalchemy import select
 
 from database.database import get_db
 from models.user import User
-from models.learner_profile import StudentProfile
+from models.learner_profile import LearnerProfile
 from schemas.user import Token
 from auth.google import get_google_auth_url, exchange_code_for_tokens, get_google_user_info
 from auth.token import create_access_token
+from auth.email import send_welcome_email
 from enums.enums import UserRole
 
 router = APIRouter()
@@ -87,11 +88,17 @@ def google_callback(code: str, db: Session = Depends(get_db)):
         db.add(user)
         db.flush()  # get user.id before committing
 
-        # automatically create a blank student profile for the new user
-        student_profile = StudentProfile(user_id=user.id)
-        db.add(student_profile)
+        # automatically create a blank learner profile for the new user
+        learner_profile = LearnerProfile(user_id=user.id)
+        db.add(learner_profile)
         db.commit()
         db.refresh(user)
+
+        # send a welcome email — don't block sign-in if it fails
+        try:
+            send_welcome_email(to_email=user.email, full_name=user.full_name)
+        except Exception as exc:
+            print(f"[warn] failed to send welcome email to {user.email}: {exc}")
 
     # check if the account is active
     if not user.is_active:

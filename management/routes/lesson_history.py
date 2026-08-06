@@ -7,8 +7,8 @@
 #                                                                     #
 #        - GET    /lesson-history/                   → all records   #
 #        - POST   /lesson-history/                   → create record #
-#        - GET    /lesson-history/student/{id}       → by student    #
-#        - GET    /lesson-history/teacher/{id}       → by teacher    #
+#        - GET    /lesson-history/learner/{id}       → by learner    #
+#        - GET    /lesson-history/tutor/{id}         → by tutor      #
 #        - GET    /lesson-history/{id}               → by record id  #
 #        - PATCH  /lesson-history/{id}               → update record #
 #        - DELETE /lesson-history/{id}               → delete record #
@@ -54,17 +54,17 @@ def create_lesson_history(
 
     new_record = LessonHistory(
         booking_id=lesson.booking_id,
-        student_id=lesson.student_id,
-        teacher_id=lesson.teacher_id,
+        learner_id=lesson.learner_id,
+        tutor_id=lesson.tutor_id,
         service_id=lesson.service_id,
         lesson_date=lesson.lesson_date,
         start_time=lesson.start_time,
         end_time=lesson.end_time,
         duration_minutes=lesson.duration_minutes,
         status=lesson.status,
-        student_notes=lesson.student_notes,
-        teacher_notes=lesson.teacher_notes,
-        student_rating=lesson.student_rating,
+        learner_notes=lesson.learner_notes,
+        tutor_notes=lesson.tutor_notes,
+        learner_rating=lesson.learner_rating,
     )
     db.add(new_record)
     db.commit()
@@ -72,26 +72,26 @@ def create_lesson_history(
     return new_record
 
 
-# ─── Get lesson history for a specific student ───────────────────────
-@router.get("/student/{student_id}", response_model=list[LessonHistoryResponse])
-def get_lesson_history_by_student(
-    student_id: int,
+# ─── Get lesson history for a specific learner ───────────────────────
+@router.get("/learner/{learner_id}", response_model=list[LessonHistoryResponse])
+def get_lesson_history_by_learner(
+    learner_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    # students can only view their own history; tutors and admins can view anyone's
-    if current_user.role == UserRole.LEARNER and current_user.id != student_id:
+    # learners can only view their own history; tutors and admins can view anyone's
+    if current_user.role == UserRole.LEARNER and current_user.id != learner_id:
         raise HTTPException(status_code=403, detail="You can only view your own lesson history")
 
     records = db.execute(
-        select(LessonHistory).where(LessonHistory.student_id == student_id)
+        select(LessonHistory).where(LessonHistory.learner_id == learner_id)
     ).scalars().all()
     return records
 
 
-# ─── Get lesson history for a specific tutor ───────────────────────
+# ─── Get lesson history for a specific tutor ─────────────────────────
 @router.get("/tutor/{tutor_id}", response_model=list[LessonHistoryResponse])
-def get_lesson_history_by_teacher(
+def get_lesson_history_by_tutor(
     tutor_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -118,7 +118,7 @@ def get_lesson_history_by_id(
         raise HTTPException(status_code=404, detail="Lesson history record not found")
 
     # learners can only see their own records
-    if current_user.role == UserRole.LEARNER and record.student_id != current_user.id:
+    if current_user.role == UserRole.LEARNER and record.learner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
 
     # tutors can only see records they are part of
@@ -142,9 +142,9 @@ def update_lesson_history(
 
     # learners can only update their own rating/notes
     if current_user.role == UserRole.LEARNER:
-        if record.student_id != current_user.id:
+        if record.learner_id != current_user.id:
             raise HTTPException(status_code=403, detail="Access denied")
-        allowed = {"student_notes", "student_rating"}
+        allowed = {"learner_notes", "learner_rating"}
         update_data = {k: v for k, v in updates.model_dump(exclude_unset=True).items() if k in allowed}
     elif current_user.role == UserRole.TUTOR:
         if record.tutor_id != current_user.id:

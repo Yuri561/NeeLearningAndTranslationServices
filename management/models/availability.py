@@ -20,5 +20,3 @@ class Availability(Base):
     
 #create the table 
 Base.metadata.create_all(bind=engine)
-
-

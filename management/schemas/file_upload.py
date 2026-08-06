@@ -21,6 +21,11 @@ class FileResponse(BaseModel):
         from_attributes = True
 
 
+
+# schema for updating file metadata
+class FileUpdate(BaseModel):
+    file_name: str | None = None
+    related_translation_request_id: int | None = None
 class TranslationRequestSummaryResponse(BaseModel):
     id: int
     learner_id: int

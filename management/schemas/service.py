@@ -8,7 +8,7 @@ from enums.enums import LanguageCode
 # ==========================
 
 class TutorMiniResponse(BaseModel):
-    id: int
+    tutor_id: int
     full_name: str
     email: str
     bio: str | None = None

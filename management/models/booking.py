@@ -24,5 +24,3 @@ class Booking(Base):
     
 #create the table 
 Base.metadata.create_all(bind=engine)
-
-

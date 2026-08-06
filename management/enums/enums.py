@@ -32,6 +32,7 @@ class LanguageCode(str, Enum):
     ES = "Espanol"
     HT = "Haitian-Creole"
     EN = "English"
+    LN = "Lingala"
     
 class UserRole(str, Enum):
     ADMIN = "admin"

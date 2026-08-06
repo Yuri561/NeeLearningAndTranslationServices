@@ -2,35 +2,15 @@
 #                                                                     #
 #                    TRANSLATION SCHEMAS                              #
 #                                                                     #
-#        Pydantic v2 models for translation request/response          #
-#        - TranslateRequest                                           #
-#        - TranslationItem                                            #
-#        - TranslateResponse                                          #
+#        Pydantic v2 models for the Google Translate Element widget.  #
 #        - LanguageInfo / LanguagesResponse                           #
+#        - TranslateWidgetConfig                                      #
+#        - TranslateSnippetResponse                                   #
 #                                                                     #
 #######################################################################
 
 
 from pydantic import BaseModel
-
-
-class TranslateRequest(BaseModel):
-    texts: list[str]                          # Array of texts to translate
-    target: str = "en"                        # Target language code
-    provider: str = "auto"                    # "auto", "mymemory", or "rapidapi"
-
-
-class TranslationItem(BaseModel):
-    original: str
-    translated: str
-    provider: str | None = None
-    error: str | None = None
-
-
-class TranslateResponse(BaseModel):
-    translations: list[TranslationItem]
-    provider: str = "unknown"
-    count: int = 0
 
 
 class LanguageInfo(BaseModel):
@@ -43,3 +23,19 @@ class LanguageInfo(BaseModel):
 class LanguagesResponse(BaseModel):
     success: bool
     languages: list[LanguageInfo]
+
+
+class TranslateWidgetConfig(BaseModel):
+    """Default configuration a frontend can use to inject the widget itself."""
+    script_src: str
+    page_language: str = "en"
+    element_id: str = "google_translate_element"
+    included_languages: str | None = None
+
+
+class TranslateSnippetResponse(BaseModel):
+    """HTML/JS snippet the frontend can embed on a page."""
+    html: str
+    script_src: str
+    page_language: str
+    included_languages: str | None = None
