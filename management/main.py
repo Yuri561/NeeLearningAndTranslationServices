@@ -1,5 +1,10 @@
 from fastapi import FastAPI
+<<<<<<< HEAD
 from routes.payment_routes import router as payment_router
+=======
+from fastapi.middleware.cors import CORSMiddleware
+
+>>>>>>> master
 from routes import (
     auth,
     availability,
@@ -19,6 +24,14 @@ app = FastAPI(
     title="Nee's Learning Management API",
     description="Internal management API for Haitian Creole tutoring and translation services",
     version="1.0.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(

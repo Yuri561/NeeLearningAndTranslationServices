@@ -15,15 +15,27 @@
 #######################################################################
 
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import HTMLResponse
+from deep_translator import GoogleTranslator
+from deep_translator.exceptions import (
+    LanguageNotSupportedException,
+    NotValidPayload,
+    TranslationNotFound,
+)
 
 from schemas.translation import (
     LanguageInfo,
     LanguagesResponse,
+    TranslateRequest,
+    TranslateResponse,
     TranslateWidgetConfig,
     TranslateSnippetResponse,
+    TranslationItem,
 )
+
+
+DEFAULT_PROVIDER = "google"
 
 
 router = APIRouter()
@@ -171,3 +183,83 @@ def get_supported_languages():
     """Return the list of languages exposed in the widget dropdown."""
     languages = [LanguageInfo(**lang) for lang in SUPPORTED_LANGUAGES]
     return LanguagesResponse(success=True, languages=languages)
+
+
+# =====================================================================
+#                    SERVER-SIDE TEXT TRANSLATION
+# =====================================================================
+
+
+@router.post("/", response_model=TranslateResponse)
+def translate_text(payload: TranslateRequest):
+    """
+    Translate one or more strings using the deep-translator library
+    (Google backend). Each input string is translated independently
+    so a failure on one item doesn't sink the whole batch — the
+    failing item just carries a non-null `error` field.
+    """
+    if not payload.texts:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="`texts` must contain at least one string.",
+        )
+
+    source = payload.source or "auto"
+    target = payload.target
+
+    # Validate target/source once up front so we fail fast on bad codes
+    try:
+        translator = GoogleTranslator(source=source, target=target)
+    except (LanguageNotSupportedException, NotValidPayload) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported language code: {exc}",
+        )
+
+    results: list[TranslationItem] = []
+    for text in payload.texts:
+        if not text or not text.strip():
+            results.append(
+                TranslationItem(
+                    original=text,
+                    translated=text,
+                    provider=DEFAULT_PROVIDER,
+                    error=None,
+                )
+            )
+            continue
+
+        try:
+            translated = translator.translate(text)
+            results.append(
+                TranslationItem(
+                    original=text,
+                    translated=translated or "",
+                    provider=DEFAULT_PROVIDER,
+                    error=None,
+                )
+            )
+        except (TranslationNotFound, NotValidPayload) as exc:
+            results.append(
+                TranslationItem(
+                    original=text,
+                    translated="",
+                    provider=DEFAULT_PROVIDER,
+                    error=str(exc),
+                )
+            )
+        except Exception as exc:  # network / rate-limit / provider error
+            results.append(
+                TranslationItem(
+                    original=text,
+                    translated="",
+                    provider=DEFAULT_PROVIDER,
+                    error=f"Translation failed: {exc}",
+                )
+            )
+
+    return TranslateResponse(
+        translations=results,
+        provider=DEFAULT_PROVIDER,
+        count=len(results),
+    )
