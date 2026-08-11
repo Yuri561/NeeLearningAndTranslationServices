@@ -46,6 +46,7 @@ def create_booking(booking: BookingCreate, db: Session = Depends(get_db)):
         notes=booking.notes,
         service_id=booking.service_id,
         tutor_id=booking.tutor_id,
+        total_price=booking.total_price
     )
     db.add(new_booking)
     db.commit()

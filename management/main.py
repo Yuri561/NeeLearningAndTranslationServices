@@ -1,10 +1,13 @@
 from fastapi import FastAPI
-<<<<<<< HEAD
-from routes.payment_routes import router as payment_router
-=======
 from fastapi.middleware.cors import CORSMiddleware
 
->>>>>>> master
+# Validate PayPal settings early to fail fast on missing credentials
+from config.paypal_config import get_paypal_settings
+get_paypal_settings(validate=True)
+
+# Import payment routes after validation
+from routes.payment_routes import router as payment_router
+
 from routes import (
     auth,
     availability,
