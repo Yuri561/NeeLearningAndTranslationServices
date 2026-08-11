@@ -11,7 +11,7 @@ const NavBar = () => {
   const location = useLocation();
 
   return (
-    <header className="w-full max-w-7xl mx-auto px-4 py-4 sticky top-0 z-50">
+    <div className="w-full max-w-7xl mx-auto relative">
       <nav className="w-full border rounded-full bg-white/90 backdrop-blur-md border-blue-400/20 flex items-center justify-between py-2.5 px-3 md:px-7 shadow-sm transition-all duration-300">
         {/* Logo */}
         <Logo />
@@ -52,7 +52,7 @@ const NavBar = () => {
 
       {/* Mobile Drawer Overlay */}
       {isOpen && (
-        <div className="lg:hidden absolute top-20 left-4 right-4 bg-white border border-blue-400/10 rounded-3xl p-6 shadow-xl z-40 animate-fade-in">
+        <div className="lg:hidden absolute top-16 left-0 right-0 bg-white border border-blue-400/10 rounded-3xl p-6 shadow-xl z-40 animate-fade-in">
           <ul className="flex flex-col gap-5 text-center mb-6">
             {navLinks.map((link: NavLink) => (
               <li key={link.id}>
@@ -71,7 +71,7 @@ const NavBar = () => {
           </div>
         </div>
       )}
-    </header>
+    </div>
   );
 };
 
