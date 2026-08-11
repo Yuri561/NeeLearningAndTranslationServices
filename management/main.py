@@ -1,10 +1,7 @@
 from fastapi import FastAPI
-<<<<<<< HEAD
 from routes.payment_routes import router as payment_router
-=======
 from fastapi.middleware.cors import CORSMiddleware
 
->>>>>>> master
 from routes import (
     auth,
     availability,

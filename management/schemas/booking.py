@@ -16,6 +16,7 @@ class BookingCreate(BaseModel):
     end_time : time
     status : Status = Status.PENDING
     notes : Optional[str] = None
+    total_price: int
     
 class BookingResponse(BookingCreate):
     id : int
