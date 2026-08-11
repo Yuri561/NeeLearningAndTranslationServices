@@ -50,4 +50,9 @@ class PayPalSettings:
 
 
 paypal_settings = PayPalSettings()
-paypal_settings.validate()
+
+def get_paypal_settings(validate: bool = False) -> PayPalSettings:
+    """Return the PayPal settings instance. If `validate` is True, run validation first."""
+    if validate:
+        paypal_settings.validate()
+    return paypal_settings
