@@ -15,6 +15,7 @@ class Service(Base):
     tutor_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     name: Mapped[str] = mapped_column(String(50), unique=True)
     description: Mapped[str] = mapped_column(String(250))
+    meeting_platform: Mapped[str] = mapped_column(String(250))
     category: Mapped[str] = mapped_column(String(50))
     language: Mapped[LanguageCode] = mapped_column(String(50))
     price: Mapped[float] = mapped_column()

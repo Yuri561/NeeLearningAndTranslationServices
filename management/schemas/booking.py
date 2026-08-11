@@ -1,5 +1,7 @@
 
 #booking schema
+from decimal import Decimal
+
 from pydantic import BaseModel
 from enums.enums import Status
 from datetime import time, date
@@ -16,7 +18,7 @@ class BookingCreate(BaseModel):
     end_time : time
     status : Status = Status.PENDING
     notes : Optional[str] = None
-    total_price: int
+    total_price: Decimal
     
 class BookingResponse(BookingCreate):
     id : int
