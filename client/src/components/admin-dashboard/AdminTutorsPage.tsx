@@ -11,8 +11,8 @@ import {
   FiUsers,
   FiVideo,
 } from "react-icons/fi";
-import { useCreateTutor, useTeacherProfiles } from "../../features/admin/adminQueries";
-import type { CreateTutorInput, TeacherProfile } from "../../features/admin/adminTypes";
+import { useCreateTutor, useTutorProfiles } from "../../features/admin/adminQueries";
+import type { CreateTutorInput, TutorProfile } from "../../features/admin/adminTypes";
 
 type TutorFormState = CreateTutorInput & {
   confirmPassword: string;
@@ -27,7 +27,7 @@ const initialForm: TutorFormState = {
   confirmPassword: "",
 };
 
-const EMPTY_TUTORS: TeacherProfile[] = [];
+const EMPTY_TUTORS: TutorProfile[] = [];
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -118,7 +118,7 @@ const Notification = ({
   );
 };
 
-const TutorCard = ({ tutor }: { tutor: TeacherProfile }) => (
+const TutorCard = ({ tutor }: { tutor: TutorProfile }) => (
   <article className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.035)] transition duration-200 hover:-translate-y-0.5 hover:border-blue-100 hover:shadow-[0_14px_35px_rgba(15,23,42,0.07)]">
     <div className="flex items-start gap-4">
       <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-haiti-navy text-sm font-extrabold text-white">
@@ -188,7 +188,7 @@ const TutorCard = ({ tutor }: { tutor: TeacherProfile }) => (
 );
 
 export const AdminTutorsPage = () => {
-  const tutorsQuery = useTeacherProfiles();
+  const tutorsQuery = useTutorProfiles();
   const createTutor = useCreateTutor();
   const [form, setForm] = useState<TutorFormState>(initialForm);
   const [errors, setErrors] = useState<TutorFormErrors>({});

@@ -17,18 +17,18 @@ export const useAdminBooking = (bookingId?: number | string) =>
     retry: 1,
   });
 
-export const useAdminStudentBookings = (studentId?: number | string) =>
+export const useAdminLearnerBookings = (learnerId?: number | string) =>
   useQuery({
-    queryKey: queryKeys.admin.studentBookings(studentId ?? "none"),
-    queryFn: () => bookingsApi.getByStudent(studentId as number | string),
-    enabled: studentId !== undefined && studentId !== "",
+    queryKey: queryKeys.admin.learnerBookings(learnerId ?? "none"),
+    queryFn: () => bookingsApi.getByLearner(learnerId as number | string),
+    enabled: learnerId !== undefined && learnerId !== "",
     retry: 1,
   });
 
-export const useAdminTeacherBookings = (teacherId?: number | string) =>
+export const useAdminTutorBookings = (tutorId?: number | string) =>
   useQuery({
-    queryKey: queryKeys.admin.teacherBookings(teacherId ?? "none"),
-    queryFn: () => bookingsApi.getByTeacher(teacherId as number | string),
-    enabled: teacherId !== undefined && teacherId !== "",
+    queryKey: queryKeys.admin.tutorBookings(tutorId ?? "none"),
+    queryFn: () => bookingsApi.getByTutor(tutorId as number | string),
+    enabled: tutorId !== undefined && tutorId !== "",
     retry: 1,
   });

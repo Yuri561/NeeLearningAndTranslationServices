@@ -2,17 +2,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminApi } from "./adminApi";
 
 export const adminKeys = {
-  teacherProfiles: ["admin", "teacher-profiles"] as const,
+  tutorProfiles: ["admin", "tutor-profiles"] as const,
   users: ["admin", "users"] as const,
   services: ["admin", "services"] as const,
   availability: ["admin", "availability"] as const,
   bookings: ["admin", "bookings"] as const,
 };
 
-export const useTeacherProfiles = () =>
+export const useTutorProfiles = () =>
   useQuery({
-    queryKey: adminKeys.teacherProfiles,
-    queryFn: adminApi.getTeacherProfiles,
+    queryKey: adminKeys.tutorProfiles,
+    queryFn: adminApi.getTutorProfiles,
     staleTime: 60_000,
   });
 
@@ -22,7 +22,7 @@ export const useCreateTutor = () => {
   return useMutation({
     mutationFn: adminApi.createTutor,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.teacherProfiles });
+      queryClient.invalidateQueries({ queryKey: adminKeys.tutorProfiles });
       queryClient.invalidateQueries({ queryKey: adminKeys.users });
     },
   });

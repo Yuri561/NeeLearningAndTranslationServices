@@ -3,29 +3,28 @@ import type { WeekDay } from "../availability/availability.types";
 export type Booking = {
   id: number;
   learner_id?: number;
-  student_id?: number;
   service_id: number | null;
-  teacher_id: number | null;
   tutor_id?: number | null;
   availability_id: number | null;
   booking_date: string;
   start_time: string;
   end_time: string;
   status?: string;
+  payment_status?: string | null;
+  total_price?: number | string;
   notes?: string | null;
 };
 
 export type CreateBookingPayload = {
-  student_id: number;
-  learner_id?: number;
-  service_id?: number | null;
-  teacher_id?: number | null;
-  tutor_id?: number | null;
-  availability_id?: number | null;
+  learner_id: number;
+  service_id: number;
+  tutor_id: number;
+  availability_id: number;
   booking_date: string;
   start_time: string;
   end_time: string;
-  status: "Pending" | "Confirmed" | "Cancelled";
+  total_price: number;
+  status?: "Pending" | "Completed" | "Confirmed" | "Cancelled";
   notes?: string;
 };
 
@@ -63,7 +62,7 @@ export type AvailabilitySlot = {
   start_time: string;
   end_time: string;
   is_active: boolean;
-  teacher_id?: number | null;
+  tutor_id?: number | null;
   booking_date?: string | null;
 };
 
@@ -124,12 +123,6 @@ export type UpdateLearnerProfilePayload = {
   learning_goals: string;
   preferred_language: string;
 };
-
-/** @deprecated Use LearnerProfile. Kept as an alias for older imports. */
-export type StudentProfile = LearnerProfile;
-
-/** @deprecated Use UpdateLearnerProfilePayload. Kept as an alias for older imports. */
-export type UpdateStudentProfilePayload = UpdateLearnerProfilePayload;
 
 export type LearnerMetric = {
   id: string;

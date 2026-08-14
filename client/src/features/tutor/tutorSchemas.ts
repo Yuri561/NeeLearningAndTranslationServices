@@ -10,6 +10,11 @@ export const tutorServiceSchema = z.object({
     .int("Duration must be a whole number.")
     .min(0, "Duration cannot be negative."),
   price: z.coerce.number().min(0, "Price cannot be negative."),
+  meeting_platform: z
+    .string()
+    .trim()
+    .url("Enter a complete meeting URL, including https://.")
+    .or(z.literal("")),
   is_active: z.boolean(),
 });
 

@@ -16,7 +16,7 @@ export interface Availability {
   start_time: string;
   end_time: string;
   is_active: boolean;
-  teacher_id?: number | null;
+  tutor_id?: number | null;
 }
 
 export interface CreateAvailabilityRequest {
@@ -34,4 +34,3 @@ export type AvailabilityFormValue = {
   end_time: string;
   is_active: boolean;
 };
-

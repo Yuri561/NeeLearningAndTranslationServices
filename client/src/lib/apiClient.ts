@@ -4,8 +4,9 @@ const DEFAULT_API_URL =
   "https://neelearningandtranslationservices.onrender.com";
 
 export const API_URL = (
-  import.meta.env.VITE_API_URL ??
-  (import.meta.env.DEV ? "" : DEFAULT_API_URL)
+  import.meta.env.DEV
+    ? ""
+    : (import.meta.env.VITE_API_URL ?? DEFAULT_API_URL)
 ).replace(/\/$/, "");
 
 // API calls use Vite's proxy in local development, but uploaded files are
@@ -16,7 +17,10 @@ export const API_ASSET_URL = (
 ).replace(/\/$/, "");
 
 type ApiErrorBody = {
-  detail?: string | Array<{ loc?: Array<string | number>; msg?: string }>;
+  detail?:
+    | string
+    | Array<{ loc?: Array<string | number>; msg?: string }>
+    | { message?: string; error_description?: string };
   message?: string;
 };
 
@@ -40,6 +44,9 @@ const getErrorMessage = (body: ApiErrorBody, fallback: string) => {
       })
       .filter(Boolean)
       .join(", ");
+  }
+  if (body.detail && typeof body.detail === "object") {
+    return body.detail.message ?? body.detail.error_description ?? fallback;
   }
   return body.message ?? fallback;
 };

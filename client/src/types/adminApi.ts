@@ -9,14 +9,14 @@ export type AdminService = {
   durationMinutes?: number;
   price?: number;
   isActive?: boolean;
-  teacherId?: number | string;
+  tutorId?: number | string;
   createdAt?: string;
   raw: ApiRecord;
 };
 
 export type AdminAvailability = {
   id: number | string;
-  teacherId?: number | string;
+  tutorId?: number | string;
   date?: string;
   day?: string;
   startTime?: string;
@@ -29,15 +29,14 @@ export type AdminAvailability = {
 export type AdminBooking = {
   id: number | string;
   learnerId?: number | string;
-  studentId?: number | string;
   tutorId?: number | string;
-  teacherId?: number | string;
   serviceId?: number | string;
   availabilityId?: number | string;
   bookingDate?: string;
   startTime?: string;
   endTime?: string;
   status?: string;
+  paymentStatus?: string;
   notes?: string;
   createdAt?: string;
   raw: ApiRecord;

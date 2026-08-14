@@ -10,7 +10,6 @@ import type {
 type AuthUserRecord = Partial<AuthUser> & {
   fullName?: unknown;
   name?: unknown;
-  teacher_id?: unknown;
 };
 
 const text = (value: unknown, fallback = "") =>
@@ -18,7 +17,7 @@ const text = (value: unknown, fallback = "") =>
 
 const normalizeAuthUser = (value: unknown): AuthUser => {
   const record = value && typeof value === "object" ? (value as AuthUserRecord) : {};
-  const tutorId = Number(record.tutor_id ?? record.teacher_id);
+  const tutorId = Number(record.tutor_id);
 
   return {
     id: Number(record.id ?? 0),

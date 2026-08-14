@@ -2,71 +2,79 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { tutorApi } from "./tutorApi";
 
 export const tutorKeys = {
-  services: (teacherId: number) => ["tutor", teacherId, "services"] as const,
-  availability: (teacherId: number) => ["tutor", teacherId, "availability"] as const,
-  bookings: (teacherId: number) => ["tutor", teacherId, "bookings"] as const,
+  services: (tutorId: number) => ["tutor", tutorId, "services"] as const,
+  availability: (tutorId: number) => ["tutor", tutorId, "availability"] as const,
+  bookings: (tutorId: number) => ["tutor", tutorId, "bookings"] as const,
 };
 
-export const useTutorServices = (teacherId?: number, email?: string) =>
+export const useTutorServices = (tutorId?: number, email?: string) =>
   useQuery({
-    queryKey: [...tutorKeys.services(teacherId ?? 0), email ?? ""] as const,
-    queryFn: () => tutorApi.getServices({ teacherId: teacherId!, email }),
-    enabled: Boolean(teacherId),
+    queryKey: [...tutorKeys.services(tutorId ?? 0), email ?? ""] as const,
+    queryFn: () => tutorApi.getServices({ tutorId: tutorId!, email }),
+    enabled: Boolean(tutorId),
     retry: 1,
   });
 
-export const useTutorAvailability = (teacherId?: number) =>
+export const useTutorAvailability = (tutorId?: number) =>
   useQuery({
-    queryKey: ["tutor-availability", teacherId ?? 0] as const,
-    queryFn: () => tutorApi.getAvailability(teacherId!),
-    enabled: Boolean(teacherId),
+    queryKey: ["tutor-availability", tutorId ?? 0] as const,
+    queryFn: () => tutorApi.getAvailability(tutorId!),
+    enabled: Boolean(tutorId),
     retry: 1,
   });
 
-export const useTutorBookings = (teacherId?: number) =>
+export const useTutorBookings = (tutorId?: number) =>
   useQuery({
-    queryKey: tutorKeys.bookings(teacherId ?? 0),
-    queryFn: () => tutorApi.getBookings(teacherId!),
-    enabled: Boolean(teacherId),
+    queryKey: tutorKeys.bookings(tutorId ?? 0),
+    queryFn: () => tutorApi.getBookings(tutorId!),
+    enabled: Boolean(tutorId),
     retry: 1,
   });
 
-export const useCreateTutorService = (teacherId?: number) => {
+export const useCreateTutorService = (tutorId?: number) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: tutorApi.createService,
     onSuccess: () => {
-      if (teacherId) queryClient.invalidateQueries({ queryKey: tutorKeys.services(teacherId) });
+      if (tutorId) queryClient.invalidateQueries({ queryKey: tutorKeys.services(tutorId) });
+      queryClient.invalidateQueries({ queryKey: ["learner", "services"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "services"] });
     },
   });
 };
 
-export const useUpdateTutorService = (teacherId?: number) => {
+export const useUpdateTutorService = (tutorId?: number) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: tutorApi.updateService,
     onSuccess: () => {
-      if (teacherId) queryClient.invalidateQueries({ queryKey: tutorKeys.services(teacherId) });
+      if (tutorId) queryClient.invalidateQueries({ queryKey: tutorKeys.services(tutorId) });
+      queryClient.invalidateQueries({ queryKey: ["learner", "services"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "services"] });
     },
   });
 };
 
-export const useDeleteTutorService = (teacherId?: number) => {
+export const useDeleteTutorService = (tutorId?: number) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: tutorApi.deleteService,
     onSuccess: () => {
-      if (teacherId) queryClient.invalidateQueries({ queryKey: tutorKeys.services(teacherId) });
+      if (tutorId) queryClient.invalidateQueries({ queryKey: tutorKeys.services(tutorId) });
+      queryClient.invalidateQueries({ queryKey: ["learner", "services"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "services"] });
     },
   });
 };
 
-export const useUpdateBookingStatus = (teacherId?: number) => {
+export const useUpdateBookingStatus = (tutorId?: number) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: tutorApi.updateBookingStatus,
     onSuccess: () => {
-      if (teacherId) queryClient.invalidateQueries({ queryKey: tutorKeys.bookings(teacherId) });
+      if (tutorId) queryClient.invalidateQueries({ queryKey: tutorKeys.bookings(tutorId) });
+      queryClient.invalidateQueries({ queryKey: ["learner"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["admin", "bookings"] });
     },
   });
 };

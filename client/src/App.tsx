@@ -36,6 +36,8 @@ import {
   LearnerServices,
   LearnerSettings,
 } from "./pages/dashboard/LearnerDashboardPages";
+import { PayPalReturnPage } from "./pages/payment/PayPalReturnPage";
+import { PayPalCancelPage } from "./pages/payment/PayPalCancelPage";
 
 function App() {
 
@@ -55,6 +57,8 @@ function App() {
           <Route path="account/security" element={<AccountSecurity />} />
         </Route>
         <Route element={<ProtectedRoute allowedRole="learner" />}>
+          <Route path="payment/paypal/return" element={<PayPalReturnPage />} />
+          <Route path="payment/paypal/cancel" element={<PayPalCancelPage />} />
           <Route path="dashboard/learner" element={<LearnerDashboard />}>
             <Route index element={<LearnerOverview />} />
             <Route path="services" element={<LearnerServices />} />

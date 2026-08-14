@@ -7,6 +7,7 @@ import {
   FiCheck,
   FiChevronDown,
   FiClock,
+  FiCreditCard,
   FiFileText,
   FiHash,
   FiMapPin,
@@ -26,14 +27,16 @@ import type {
   Booking,
   LearningServiceWithTutor,
 } from "../../features/learner/learnerTypes";
+import { useCreatePayPalOrder } from "../../features/payments/paymentQueries";
+import { PayPalCheckout } from "../../features/payments/PayPalCheckout";
+import { bookingPaymentStatus, isPaymentCompleted, paymentStatusName } from "../../features/payments/paymentStatus";
 
 const PAGE_LOADED_AT = Date.now();
 
 const bookingBelongsToLearner = (booking: Booking, learnerId?: number) =>
   Boolean(
     learnerId &&
-      (String(booking.student_id ?? "") === String(learnerId) ||
-        String(booking.learner_id ?? "") === String(learnerId)),
+      String(booking.learner_id ?? "") === String(learnerId),
   );
 
 const formatDate = (date: string) => {
@@ -105,6 +108,15 @@ const StatusBadge = ({ status }: { status?: string }) => {
   );
 };
 
+const PaymentBadge = ({ status }: { status?: string | null }) => {
+  const completed = isPaymentCompleted(status);
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[0.68rem] font-bold ring-1 ring-inset ${completed ? "bg-emerald-50 text-emerald-700 ring-emerald-200" : "bg-amber-50 text-amber-700 ring-amber-200"}`}>
+      <FiCreditCard /> {paymentStatusName(status)}
+    </span>
+  );
+};
+
 const BookingSkeleton = () => (
   <div className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6">
     <div className="animate-pulse">
@@ -163,11 +175,14 @@ const BookingCard = ({
     className="group w-full rounded-2xl border border-slate-200/80 bg-white p-5 text-left shadow-[0_5px_24px_rgba(15,23,42,.035)] transition duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_18px_40px_rgba(6,67,159,.10)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-haiti-navy sm:p-6"
     aria-label={`View booking ${booking.id} details`}
   >
-    <div className="flex items-center justify-between gap-3">
+    <div className="flex items-start justify-between gap-3">
       <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-slate-400">
         <FiHash className="text-haiti-red" /> Booking {booking.id}
       </span>
-      <StatusBadge status={booking.status} />
+      <div className="flex flex-col items-end gap-2">
+        <StatusBadge status={booking.status} />
+        {bookingPaymentStatus(booking.payment_status, booking.status) ? <PaymentBadge status={bookingPaymentStatus(booking.payment_status, booking.status)} /> : null}
+      </div>
     </div>
 
     <h2 className="mt-5 text-xl font-extrabold leading-snug text-slate-900 transition group-hover:text-haiti-navy">
@@ -221,6 +236,29 @@ const BookingDetails = ({
   availabilityError: boolean;
   onClose: () => void;
 }) => {
+  const createPayPalOrder = useCreatePayPalOrder();
+  const [paymentError, setPaymentError] = useState("");
+  const [paypalOrderId, setPayPalOrderId] = useState<string | null>(null);
+  const effectivePaymentStatus = bookingPaymentStatus(booking.payment_status, booking.status);
+
+  const payWithPayPal = () => {
+    if (createPayPalOrder.isPending || isPaymentCompleted(effectivePaymentStatus)) return;
+    setPaymentError("");
+    createPayPalOrder.mutate(booking.id, {
+      onSuccess: (order) => {
+        if (!order.paypal_order_id) {
+          setPaymentError("PayPal did not provide an order ID. Please try again.");
+          return;
+        }
+        setPayPalOrderId(order.paypal_order_id);
+      },
+      onError: (error) => {
+        const reason = error instanceof Error ? error.message : "PayPal payment could not be prepared.";
+        setPaymentError(`${reason} You have not been charged. Please try again.`);
+      },
+    });
+  };
+
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => event.key === "Escape" && onClose();
     document.addEventListener("keydown", handleKey);
@@ -250,7 +288,10 @@ const BookingDetails = ({
               <h2 id="booking-detail-title" className="mt-2 text-2xl font-extrabold leading-tight text-slate-900">{service?.name ?? "Learning session"}</h2>
               <p className="mt-2 flex items-center gap-2 text-sm font-semibold text-slate-500"><FiUser className="text-haiti-red" /> {service?.tutor.full_name ?? "Tutor assigned to this service"}</p>
             </div>
-            <StatusBadge status={booking.status} />
+            <div className="flex flex-col items-end gap-2">
+              <StatusBadge status={booking.status} />
+              {effectivePaymentStatus ? <PaymentBadge status={effectivePaymentStatus} /> : null}
+            </div>
           </div>
 
           <div className="mt-7 grid grid-cols-2 gap-3">
@@ -265,6 +306,26 @@ const BookingDetails = ({
             <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
               <p className="flex items-start gap-3 text-sm leading-6 text-slate-600"><FiFileText className="mt-1 shrink-0 text-haiti-navy" /> {booking.notes?.trim() || "No notes were added to this booking."}</p>
             </div>
+          </section>
+
+          <section className="mt-7 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900">Lesson payment</h3>
+                <div className="mt-2"><PaymentBadge status={effectivePaymentStatus} /></div>
+              </div>
+              {!isPaymentCompleted(effectivePaymentStatus) && !paypalOrderId ? (
+                <button type="button" onClick={payWithPayPal} disabled={createPayPalOrder.isPending} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#0070ba] px-5 text-sm font-bold text-white transition hover:bg-[#005ea6] disabled:cursor-not-allowed disabled:opacity-60">
+                  {createPayPalOrder.isPending ? <><span className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Redirecting to PayPal...</> : <><FiCreditCard /> Pay with PayPal</>}
+                </button>
+              ) : null}
+            </div>
+            {paymentError ? <p className="mt-3 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{paymentError}</p> : null}
+            {paypalOrderId ? (
+              <div className="mt-4">
+                <PayPalCheckout paypalOrderId={paypalOrderId} onCompleted={() => setPaymentError("")} />
+              </div>
+            ) : null}
           </section>
 
           <section className="mt-7">

@@ -15,7 +15,7 @@ import {
 } from "react-icons/fi";
 import {
   useLearningServices,
-  useTeacherAvailability,
+  useTutorAvailability,
 } from "../../features/learner/learnerQueries";
 import type {
   AvailabilitySlot,
@@ -139,14 +139,18 @@ const DayCard = ({
       {isToday && <span className="rounded-full bg-red-50 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-haiti-red">Today</span>}
     </div>
     <div className="mt-5 space-y-3">
-      {sortSlots(slots).map((slot) => (
-        <TimeSlot
-          key={slot.id}
-          slot={slot}
-          tutorName={slot.teacher_id ? tutorMap.get(slot.teacher_id) : undefined}
-          onSelect={() => onSelect(slot)}
-        />
-      ))}
+      {sortSlots(slots).map((slot) => {
+        const slotTutorId = slot.tutor_id ?? null;
+        const tutorName = slotTutorId ? tutorMap.get(Number(slotTutorId)) : undefined;
+        return (
+          <TimeSlot
+            key={slot.id}
+            slot={slot}
+            tutorName={tutorName}
+            onSelect={() => onSelect(slot)}
+          />
+        );
+      })}
     </div>
   </article>
 );
@@ -225,17 +229,10 @@ export const LearnerAvailabilityPage = () => {
   const { tutorId: routeTutorId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const teacherFilter = routeTutorId ?? searchParams.get("tutorId") ?? "";
+  const rawTutorFilter = routeTutorId ?? searchParams.get("tutorId") ?? "";
   const [dayFilter, setDayFilter] = useState("all");
   const [selected, setSelected] = useState<AvailabilitySlot | null>(null);
   const [bookingAvailability, setBookingAvailability] = useState<AvailabilitySlot | null>(null);
-  const parsedTutorId = Number(teacherFilter);
-  const selectedTutorId = Number.isInteger(parsedTutorId) && parsedTutorId > 0
-    ? parsedTutorId
-    : null;
-  const tutorAvailabilityQuery = useTeacherAvailability(selectedTutorId);
-
-  const today = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(new Date());
 
   // Build a map from tutor ID → tutor name (sourced from services)
   const tutorMap = useMemo(() => {
@@ -248,21 +245,32 @@ export const LearnerAvailabilityPage = () => {
     return map;
   }, [servicesQuery.data]);
 
-  // Learners only receive active slots from the selected tutor-specific query.
-  const allActiveSlots = useMemo(
-    () => (tutorAvailabilityQuery.data ?? [])
-      .filter((slot) => slot.is_active)
-      .map((slot) => ({ ...slot, teacher_id: selectedTutorId })),
-    [selectedTutorId, tutorAvailabilityQuery.data],
-  );
-
-  // Tutor choices come from real service/tutor records. Selecting one switches
-  // the data source to GET /availability/tutor/{id}.
   const tutorOptions = useMemo(() => {
     return [...tutorMap.entries()]
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [tutorMap]);
+
+  // Determine selected tutor: query param or default to the first tutor in list
+  const defaultTutorId = tutorOptions[0]?.id ?? null;
+  const parsedTutorId = Number(rawTutorFilter);
+  const selectedTutorId = Number.isInteger(parsedTutorId) && parsedTutorId > 0
+    ? parsedTutorId
+    : defaultTutorId;
+
+  const tutorFilter = selectedTutorId ? String(selectedTutorId) : "";
+
+  // Fetch availability for selected tutor using default query
+  const tutorAvailabilityQuery = useTutorAvailability(selectedTutorId);
+
+  const today = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(new Date());
+
+  const allActiveSlots = useMemo(
+    () => (tutorAvailabilityQuery.data ?? [])
+      .filter((slot) => slot.is_active)
+      .map((slot) => ({ ...slot, tutor_id: selectedTutorId })),
+    [selectedTutorId, tutorAvailabilityQuery.data],
+  );
 
   const filteredSlots = allActiveSlots;
 
@@ -292,12 +300,12 @@ export const LearnerAvailabilityPage = () => {
     [servicesQuery.data],
   );
   const servicesForSelectedTutor = useMemo(() => {
-    if (!selected?.teacher_id) return activeServices;
-    return activeServices.filter((s) => s.tutor.id === selected.teacher_id);
+    if (!selected?.tutor_id) return activeServices;
+    return activeServices.filter((s) => s.tutor.id === selected.tutor_id);
   }, [activeServices, selected]);
 
-  const selectedSlotTutorName = selected?.teacher_id
-    ? tutorMap.get(selected.teacher_id)
+  const selectedSlotTutorName = selected?.tutor_id
+    ? tutorMap.get(selected.tutor_id)
     : undefined;
 
   return (
@@ -309,7 +317,7 @@ export const LearnerAvailabilityPage = () => {
             <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-200"><FiSun /> Plan your learning</p>
             <h1 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">Tutor Availability</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100">
-              Choose a tutor to view only that tutor&apos;s active weekly availability.
+              View active weekly availability for your chosen tutor.
             </p>
           </div>
           {selectedTutorId && !tutorAvailabilityQuery.isLoading && !tutorAvailabilityQuery.isError && (
@@ -333,42 +341,29 @@ export const LearnerAvailabilityPage = () => {
           <FiUser className="text-haiti-red shrink-0" />
           <span>
             {selectedTutor
-              ? <><strong className="text-slate-800">{selectedTutor.name}</strong> &middot; Showing their availability</>
-              : <><strong className="text-slate-800">Choose a tutor</strong> &middot; Times are shown in your local timezone</>
+              ? <><strong className="text-slate-800">{selectedTutor.name}</strong> &middot; Showing active availability</>
+              : <><strong className="text-slate-800">Tutor Availability</strong> &middot; Times are shown in your local timezone</>
             }
           </span>
-          {selectedTutor && !routeTutorId && (
-            <button
-              type="button"
-              onClick={() => { setSearchParams({}); setDayFilter("all"); setSelected(null); }}
-              className="ml-1 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-500 transition hover:bg-red-50 hover:text-haiti-red"
-              aria-label="Clear teacher filter"
-            >
-              <FiX className="size-3" /> Clear
-            </button>
-          )}
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          {/* Teacher name filter */}
+          {/* Tutor name filter */}
           <label className="relative">
-            <span className="sr-only">Filter by teacher</span>
+            <span className="sr-only">Filter by tutor</span>
             <FiSearch className="pointer-events-none absolute left-3.5 top-3.5 size-4 text-slate-400" />
             <select
-              id="teacher-filter"
-              value={teacherFilter}
+              id="tutor-filter"
+              value={tutorFilter}
               disabled={Boolean(routeTutorId)}
               onChange={(e) => {
                 setSearchParams(e.target.value ? { tutorId: e.target.value } : {});
                 setDayFilter("all");
                 setSelected(null);
               }}
-              className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-10 text-sm font-bold text-slate-700 outline-none transition hover:border-slate-300 focus:border-haiti-navy focus:ring-4 focus:ring-blue-100 sm:w-56"
+              className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-10 text-sm font-bold text-slate-700 outline-none transition hover:border-slate-300 focus:border-haiti-navy focus:ring-4 focus:ring-blue-100 sm:w-60"
             >
-              <option value="">Select a teacher</option>
-              {selectedTutor && !tutorOptions.some(({ id }) => id === selectedTutor.id) ? (
-                <option value={selectedTutor.id}>{selectedTutor.name}</option>
-              ) : null}
+              {!tutorOptions.length && <option value="">Loading tutors...</option>}
               {tutorOptions.map(({ id, name }) => (
                 <option key={id} value={id}>{name}</option>
               ))}
@@ -450,15 +445,15 @@ export const LearnerAvailabilityPage = () => {
               {filteredSlots.length
                 ? `No active times on ${dayFilter}`
                 : selectedTutorId
-                  ? "No availability for this teacher yet"
-                  : "Select a tutor to view availability"}
+                  ? "No availability for this professor yet"
+                  : "Select a professor to view availability"}
             </h2>
             <p className="mt-2 text-sm text-slate-500">
               {filteredSlots.length
                 ? "Choose another day to explore the weekly schedule."
                 : selectedTutorId
-                  ? "Try selecting a different teacher or check back soon."
-                  : "Choose a tutor above to load their active weekly schedule."}
+                  ? "Try selecting a different professor or check back soon."
+                  : "Choose a professor above to load their active weekly schedule."}
             </p>
             {dayFilter !== "all" && (
               <button

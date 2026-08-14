@@ -6,6 +6,7 @@ export type TutorService = {
   language: string;
   duration_minutes: number;
   price: number;
+  meeting_platform?: string | null;
   is_active?: boolean;
   created_at?: string | null;
 };
@@ -18,21 +19,20 @@ export type TutorAvailability = {
   start_time: string;
   end_time: string;
   is_active?: boolean;
-  teacher_id?: number | null;
+  tutor_id?: number | null;
 };
 
 export type TutorBooking = {
   id: number;
   learner_id?: number;
-  student_id?: number;
   service_id?: number | null;
-  teacher_id?: number | null;
   tutor_id?: number | null;
   availability_id?: number | null;
   booking_date: string;
   start_time: string;
   end_time: string;
   status?: string;
+  payment_status?: string | null;
   notes?: string | null;
 };
 
@@ -43,5 +43,6 @@ export type ServicePayload = {
   language: string;
   duration_minutes: number;
   price: number;
+  meeting_platform?: string;
   is_active: boolean;
 };

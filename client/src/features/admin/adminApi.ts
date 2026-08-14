@@ -4,19 +4,19 @@ import type { AvailabilitySlot, Booking } from "../learner/learnerTypes";
 import type {
   AdminUser,
   CreateTutorInput,
-  TeacherProfile,
-  TeacherProfileUser,
+  TutorProfile,
+  TutorProfileUser,
 } from "./adminTypes";
 
-type RawTeacherProfile = Partial<
-  Omit<TeacherProfile, "full_name" | "specialization" | "meeting_platform">
+type RawTutorProfile = Partial<
+  Omit<TutorProfile, "full_name" | "specialization" | "meeting_platform">
 > & {
   full_name?: string | null;
   email?: string | null;
   name?: string | null;
   specialization?: string[] | string | null;
   meeting_platform?: string[] | string | null;
-  user?: TeacherProfileUser | null;
+  user?: TutorProfileUser | null;
 };
 
 const toStringArray = (value?: string[] | string | null) => {
@@ -30,7 +30,7 @@ const toStringArray = (value?: string[] | string | null) => {
   return [];
 };
 
-const normalizeTeacherProfile = (profile: RawTeacherProfile): TeacherProfile => ({
+const normalizeTutorProfile = (profile: RawTutorProfile): TutorProfile => ({
   id: Number(profile.id ?? profile.user_id ?? profile.user?.id ?? 0),
   user_id: profile.user_id ?? profile.user?.id ?? null,
   full_name:
@@ -59,14 +59,14 @@ export const adminApi = {
       }),
     }),
 
-  getTeacherProfiles: async () => {
-    const profiles = await apiRequest<RawTeacherProfile[]>(
-      "/api/v1/teacher-profiles/",
+  getTutorProfiles: async () => {
+    const profiles = await apiRequest<RawTutorProfile[]>(
+      "/api/v1/tutor-profiles/",
       {},
       true
     );
 
-    return profiles.map(normalizeTeacherProfile);
+    return profiles.map(normalizeTutorProfile);
   },
 
   getUsers: () => apiRequest<AdminUser[]>("/api/v1/users/", {}, true),

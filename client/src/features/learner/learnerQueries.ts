@@ -8,8 +8,8 @@ export const learnerKeys = {
   bookings: (learnerId: number) => ["learner", learnerId, "bookings"] as const,
   services: ["learner", "services"] as const,
   availability: ["learner", "availability"] as const,
-  teacherAvailability: (teacherId: number) =>
-    ["tutor-availability", teacherId] as const,
+  tutorAvailability: (tutorId: number) =>
+    ["tutor-availability", tutorId] as const,
   availabilityDetail: (availabilityId: number) =>
     ["learner", "availability", availabilityId] as const,
   translationLanguages: ["learner", "translation", "languages"] as const,
@@ -21,7 +21,6 @@ export const learnerKeys = {
     ["learner", "translation", "requests", learnerId] as const,
   profile: ["learner", "profile", "me"] as const,
   profileByUserId: (userId: number) => ["learner", "profile", "user", userId] as const,
-  studentProfile: ["learner", "profile", "me"] as const,
 };
 
 export const useLearnerBookings = (learnerId?: number) =>
@@ -41,10 +40,8 @@ export const useCreateBooking = (learnerId?: number) => {
       if (!learnerId) return;
       const normalizedBooking: Booking = {
         ...booking,
-        student_id: booking.student_id ?? booking.learner_id ?? learnerId,
-        learner_id: booking.learner_id ?? booking.student_id ?? learnerId,
-        teacher_id: booking.teacher_id ?? booking.tutor_id ?? null,
-        tutor_id: booking.tutor_id ?? booking.teacher_id ?? null,
+        learner_id: booking.learner_id ?? learnerId,
+        tutor_id: booking.tutor_id ?? null,
       };
 
       queryClient.setQueryData<Booking[]>(
@@ -84,7 +81,7 @@ export const useMyLearnerProfile = () =>
     staleTime: 5 * 60_000,
   });
 
-export const useUpdateMyStudentProfile = () => {
+export const useUpdateMyLearnerProfile = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -96,8 +93,6 @@ export const useUpdateMyStudentProfile = () => {
   });
 };
 
-export const useMyStudentProfile = useMyLearnerProfile;
-
 export const useLearnerProfileByUserId = (userId?: number) =>
   useQuery({
     queryKey: learnerKeys.profileByUserId(userId ?? 0),
@@ -105,8 +100,6 @@ export const useLearnerProfileByUserId = (userId?: number) =>
     enabled: Number.isInteger(userId) && (userId ?? 0) > 0,
     staleTime: 5 * 60_000,
   });
-
-export const useUpdateMyLearnerProfile = useUpdateMyStudentProfile;
 
 const updateCachedProfile = (
   queryClient: ReturnType<typeof useQueryClient>,
@@ -137,12 +130,20 @@ export const useDeleteMyProfilePicture = () => {
   });
 };
 
-export const useTeacherAvailability = (teacherId?: number | null) =>
+export const useAllAvailability = () =>
   useQuery({
-    queryKey: learnerKeys.teacherAvailability(teacherId ?? 0),
-    queryFn: () => learnerApi.getAvailabilityByTeacher(teacherId!),
+    queryKey: learnerKeys.availability,
+    queryFn: () => learnerApi.getAllAvailability(),
     select: (slots) => slots.map(toLocalAvailability),
-    enabled: Boolean(teacherId),
+    staleTime: 5 * 60_000,
+  });
+
+export const useTutorAvailability = (tutorId?: number | null) =>
+  useQuery({
+    queryKey: learnerKeys.tutorAvailability(tutorId ?? 0),
+    queryFn: () => learnerApi.getAvailabilityByTutor(tutorId!),
+    select: (slots) => slots.map(toLocalAvailability),
+    enabled: Boolean(tutorId),
     staleTime: 5 * 60_000,
   });
 

@@ -99,7 +99,7 @@ export const LearnerBookSessionPage = () => {
                 {service.duration_minutes} min
               </span>
               <span className="rounded-lg bg-slate-50 px-2.5 py-2">
-                Teacher #{service.tutor.id}
+                Tutor #{service.tutor.id}
               </span>
             </div>
             <button

@@ -13,6 +13,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: true,
       },
+      "/payments": {
+        target: "https://neelearningandtranslationservices.onrender.com",
+        changeOrigin: true,
+        secure: true,
+      },
     },
   }
 })

@@ -26,7 +26,7 @@ type RawLearningServiceWithTutor = Omit<LearningServiceWithTutor, "tutor"> & {
   tutor: RawLearningServiceTutor;
 };
 
-type RawAvailabilityByTeacherResponse = AvailabilitySlot[] | {
+type RawAvailabilityByTutorResponse = AvailabilitySlot[] | {
   availability?: AvailabilitySlot[];
   slots?: AvailabilitySlot[];
 };
@@ -64,11 +64,10 @@ const normalizeLearningService = (
 
 export const learnerApi = {
   getBookings: async (learnerId: number) => {
-    const bookings = await apiRequest<Booking[]>("/api/v1/bookings/", {}, true);
-    return bookings.filter(
-      (booking) =>
-        String(booking.student_id ?? "") === String(learnerId) ||
-        String(booking.learner_id ?? "") === String(learnerId)
+    return apiRequest<Booking[]>(
+      `/api/v1/bookings/learner/${encodeURIComponent(learnerId)}`,
+      {},
+      true
     );
   },
 
@@ -90,9 +89,31 @@ export const learnerApi = {
     return services.map(normalizeLearningService);
   },
 
-  getAvailabilityByTeacher: async (teacherId: number) => {
-    const response = await apiRequest<RawAvailabilityByTeacherResponse>(
-      `/api/v1/availability/tutor/${teacherId}`,
+  getAllAvailability: async () => {
+    const response = await apiRequest<RawAvailabilityByTutorResponse>(
+      "/api/v1/availability/",
+      {},
+      true
+    );
+
+    const slots = normalizeCollection<AvailabilitySlot>(response, [
+      "availability",
+      "slots",
+    ]);
+
+    return slots.map((slot) => {
+      const raw = slot as Record<string, unknown>;
+      const tutorId = toNullableNumber(raw.tutor_id);
+      return {
+        ...slot,
+        tutor_id: tutorId,
+      };
+    });
+  },
+
+  getAvailabilityByTutor: async (tutorId: number) => {
+    const response = await apiRequest<RawAvailabilityByTutorResponse>(
+      `/api/v1/availability/tutor/${tutorId}`,
       {},
       true
     );
@@ -193,17 +214,4 @@ export const learnerApi = {
       true
     ),
 
-  // Compatibility names for code that still uses the former student terminology.
-  getMyStudentProfile: () =>
-    apiRequest<LearnerProfile>("/api/v1/learner-profiles/me", {}, true),
-
-  updateMyStudentProfile: (payload: UpdateLearnerProfilePayload) =>
-    apiRequest<LearnerProfile>(
-      "/api/v1/learner-profiles/me",
-      {
-        method: "PUT",
-        body: JSON.stringify(payload),
-      },
-      true
-    ),
 };

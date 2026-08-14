@@ -17,10 +17,10 @@ export const useAdminService = (serviceId?: number | string) =>
     retry: 1,
   });
 
-export const useAdminTeacherServices = (teacherId?: number | string) =>
+export const useAdminTutorServices = (tutorId?: number | string) =>
   useQuery({
-    queryKey: queryKeys.admin.teacherServices(teacherId ?? "none"),
-    queryFn: () => servicesApi.getByTeacher(teacherId as number | string),
-    enabled: teacherId !== undefined && teacherId !== "",
+    queryKey: queryKeys.admin.tutorServices(tutorId ?? "none"),
+    queryFn: () => servicesApi.getByTutor(tutorId as number | string),
+    enabled: tutorId !== undefined && tutorId !== "",
     retry: 1,
   });

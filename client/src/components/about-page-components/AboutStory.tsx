@@ -95,7 +95,7 @@ export const AboutStory = () => {
             <div className="absolute -left-6 -bottom-6 w-4/5 h-4/5 rounded-[24px] overflow-hidden border border-blue-400/10 shadow-lg scale-95 opacity-50 bg-slate-100">
               <img
                 src="/about-page-picture/card-image.jpg"
-                alt="Student study board"
+                alt="Learner study board"
                 className="w-full h-full object-cover"
                 loading="lazy"
               />

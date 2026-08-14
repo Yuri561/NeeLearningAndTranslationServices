@@ -390,7 +390,7 @@ export const LearnerTranslationPage = () => {
     const selectedFileError = validateTranslationFile(selectedFile);
 
     if (!userId) {
-      setFileError("Your student account could not be identified. Please sign in again.");
+      setFileError("Your learner account could not be identified. Please sign in again.");
       return;
     }
     if (selectedFileError) {
@@ -442,7 +442,7 @@ export const LearnerTranslationPage = () => {
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div>
             <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-200">
-              <FiUploadCloud /> Student translation service
+              <FiUploadCloud /> Learner translation service
             </p>
             <h1 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">Translation Documents</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100">

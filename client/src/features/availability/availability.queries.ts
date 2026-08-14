@@ -20,9 +20,12 @@ const useSyncAvailability = (tutorId?: number) => {
   const queryClient = useQueryClient();
   return () => {
     if (!tutorId) return Promise.resolve();
-    return queryClient.invalidateQueries({
+    const ownAvailability = queryClient.invalidateQueries({
       queryKey: availabilityKeys.tutor(tutorId),
     });
+    queryClient.invalidateQueries({ queryKey: ["learner", "availability"] });
+    queryClient.invalidateQueries({ queryKey: ["admin", "availability"] });
+    return ownAvailability;
   };
 };
 
@@ -64,10 +67,10 @@ export const useAdminAvailabilitySlot = (availabilityId?: number | string) =>
     retry: 1,
   });
 
-export const useAdminTeacherAvailability = (teacherId?: number | string) =>
+export const useAdminTutorAvailability = (tutorId?: number | string) =>
   useQuery({
-    queryKey: queryKeys.admin.teacherAvailability(teacherId ?? "none"),
-    queryFn: () => adminAvailabilityApi.getByTeacher(teacherId as number | string),
-    enabled: teacherId !== undefined && teacherId !== "",
+    queryKey: queryKeys.admin.tutorAvailability(tutorId ?? "none"),
+    queryFn: () => adminAvailabilityApi.getByTutor(tutorId as number | string),
+    enabled: tutorId !== undefined && tutorId !== "",
     retry: 1,
   });

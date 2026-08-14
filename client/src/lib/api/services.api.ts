@@ -18,9 +18,9 @@ export const servicesApi = {
     return normalizeService(response);
   },
 
-  getByTeacher: async (teacherId: number | string): Promise<AdminService[]> => {
+  getByTutor: async (tutorId: number | string): Promise<AdminService[]> => {
     const response = await apiRequest<unknown>(
-      `${API_BASE_PATH}/services/teacher/${encodeURIComponent(String(teacherId))}/`,
+      `${API_BASE_PATH}/services/tutor/${encodeURIComponent(String(tutorId))}`,
       {},
       true
     );

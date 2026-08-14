@@ -22,34 +22,19 @@ const normalizeTutorService = (service: ServiceWithTutor): TutorService => ({
   language: service.language,
   duration_minutes: service.duration_minutes,
   price: service.price,
+  meeting_platform: service.meeting_platform ?? null,
   is_active: service.is_active,
   created_at: service.created_at,
 });
 
 export const tutorApi = {
-  getServices: async ({
-    teacherId,
-    email,
-  }: {
-    teacherId: number;
-    email?: string;
-  }) => {
+  getServices: async ({ tutorId }: { tutorId: number; email?: string }) => {
     const services = await apiRequest<ServiceWithTutor[]>(
-      "/api/v1/services/with-tutors",
+      `/api/v1/services/tutor/${encodeURIComponent(tutorId)}`,
       {},
       true
     );
-    const normalizedEmail = email?.toLowerCase();
-    return services
-      .filter((service) => {
-        const tutorId = service.tutor?.tutor_id ?? service.tutor?.id;
-        const tutorEmail = service.tutor?.email?.toLowerCase();
-        return (
-          String(tutorId ?? "") === String(teacherId) ||
-          (normalizedEmail && tutorEmail === normalizedEmail)
-        );
-      })
-      .map(normalizeTutorService);
+    return services.map(normalizeTutorService);
   },
 
   getService: (serviceId: number) =>
@@ -84,19 +69,18 @@ export const tutorApi = {
       true
     ),
 
-  getAvailability: (teacherId: number) =>
+  getAvailability: (tutorId: number) =>
     apiRequest<TutorAvailability[]>(
-      `/api/v1/availability/tutor/${teacherId}`,
+      `/api/v1/availability/tutor/${tutorId}`,
       {},
       true
     ),
 
-  getBookings: async (teacherId: number) => {
-    const bookings = await apiRequest<TutorBooking[]>("/api/v1/bookings/", {}, true);
-    return bookings.filter(
-      (booking) =>
-        String(booking.teacher_id ?? "") === String(teacherId) ||
-        String(booking.tutor_id ?? "") === String(teacherId)
+  getBookings: async (tutorId: number) => {
+    return apiRequest<TutorBooking[]>(
+      `/api/v1/bookings/tutor/${encodeURIComponent(tutorId)}`,
+      {},
+      true
     );
   },
 

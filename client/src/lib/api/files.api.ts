@@ -57,7 +57,7 @@ export const filesApi = {
 
   getUploadById: async (fileId: number | string): Promise<AdminFile> => {
     return requestFileOrMetadata(
-      `${API_BASE_PATH}/files/upload/${encodeURIComponent(String(fileId))}/`
+      `${API_BASE_PATH}/files/${encodeURIComponent(String(fileId))}`
     );
   },
 

@@ -28,7 +28,7 @@ const features: FeatureCardData[] = [
   //   imagePosition: "left",
   //   image: "/choose-us-pictures/first-card.jpg",
   //   imageAlt:
-  //     "Student studying language courses on a laptop with interactive lesson panels",
+  //     "Learner studying language courses on a laptop with interactive lesson panels",
   // },
   {
     headline: "Every document is translated with precision and clarity.",
@@ -58,7 +58,7 @@ const features: FeatureCardData[] = [
     imagePosition: "left", 
     image: "/choose-us-pictures/third-card (3).jpg",
     imageAlt:
-      "Student learning dashboard displaying completed lessons and milestones",
+      "Learner dashboard displaying completed lessons and milestones",
   },
 ];
 

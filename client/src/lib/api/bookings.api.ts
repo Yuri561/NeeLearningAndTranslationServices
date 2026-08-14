@@ -18,18 +18,18 @@ export const bookingsApi = {
     return normalizeBooking(response);
   },
 
-  getByStudent: async (studentId: number | string): Promise<AdminBooking[]> => {
+  getByLearner: async (learnerId: number | string): Promise<AdminBooking[]> => {
     const response = await apiRequest<unknown>(
-      `${API_BASE_PATH}/bookings/student/${encodeURIComponent(String(studentId))}/`,
+      `${API_BASE_PATH}/bookings/learner/${encodeURIComponent(String(learnerId))}`,
       {},
       true
     );
     return unwrapList(response).map(normalizeBooking);
   },
 
-  getByTeacher: async (teacherId: number | string): Promise<AdminBooking[]> => {
+  getByTutor: async (tutorId: number | string): Promise<AdminBooking[]> => {
     const response = await apiRequest<unknown>(
-      `${API_BASE_PATH}/bookings/teacher/${encodeURIComponent(String(teacherId))}/`,
+      `${API_BASE_PATH}/bookings/tutor/${encodeURIComponent(String(tutorId))}`,
       {},
       true
     );

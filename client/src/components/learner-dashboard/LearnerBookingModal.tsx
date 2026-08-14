@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   FiAlertCircle,
   FiArrowRight,
@@ -13,8 +12,10 @@ import {
 import { useCurrentUser } from "../../features/auth/authQueries";
 import {
   useCreateBooking,
-  useTeacherAvailability,
+  useTutorAvailability,
 } from "../../features/learner/learnerQueries";
+import { useCreatePayPalOrder } from "../../features/payments/paymentQueries";
+import { PayPalCheckout } from "../../features/payments/PayPalCheckout";
 import type {
   AvailabilitySlot,
   CreateBookingPayload,
@@ -82,9 +83,9 @@ const formatSlotLabel = (slot: AvailabilitySlot) => {
 const isBookingResponseValid = (booking: unknown) =>
   Boolean(
     booking &&
-      typeof booking === "object" &&
-      "id" in booking &&
-      Number.isFinite(Number((booking as { id?: unknown }).id)),
+    typeof booking === "object" &&
+    "id" in booking &&
+    Number.isFinite(Number((booking as { id?: unknown }).id)),
   );
 
 const toOptionalInteger = (value: unknown) => {
@@ -100,8 +101,8 @@ export const LearnerBookingModal = ({
   onClose,
 }: LearnerBookingModalProps) => {
   const { data: user } = useCurrentUser();
-  const navigate = useNavigate();
   const createBooking = useCreateBooking(user?.id);
+  const createPayPalOrder = useCreatePayPalOrder();
   const activeServices = useMemo(
     () => services.filter((item) => item.is_active),
     [services],
@@ -113,8 +114,8 @@ export const LearnerBookingModal = ({
     availability?.id ? String(availability.id) : "",
   );
   const selectedService = service ?? activeServices.find((item) => String(item.id) === selectedServiceId);
-  const selectedTeacherId = toOptionalInteger(selectedService?.tutor.id ?? availability?.teacher_id);
-  const availabilityQuery = useTeacherAvailability(selectedTeacherId);
+  const selectedTutorId = toOptionalInteger(selectedService?.tutor.id ?? availability?.tutor_id);
+  const availabilityQuery = useTutorAvailability(selectedTutorId);
   const activeAvailability = useMemo(
     () => (availabilityQuery.data ?? []).filter((slot) => slot.is_active),
     [availabilityQuery.data],
@@ -133,6 +134,29 @@ export const LearnerBookingModal = ({
   const [notes, setNotes] = useState("");
   const [formError, setFormError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [createdBookingId, setCreatedBookingId] = useState<number | null>(null);
+  const [paypalOrderId, setPayPalOrderId] = useState<string | null>(null);
+
+  const preparePayPalPayment = (bookingId: number) => {
+    setFormError("");
+    setSuccessMessage(`Booking #${bookingId} was created. Preparing PayPal payment...`);
+    createPayPalOrder.mutate(bookingId, {
+      onSuccess: (order) => {
+        if (!order.paypal_order_id) {
+          setFormError("Your booking was created, but PayPal did not provide an order ID. Please try again from My Bookings.");
+          setSuccessMessage("");
+          return;
+        }
+        setPayPalOrderId(order.paypal_order_id);
+        setSuccessMessage(`Booking #${bookingId} was created. Choose a secure PayPal payment method below.`);
+      },
+      onError: (error) => {
+        setSuccessMessage("");
+        const reason = error instanceof Error ? error.message : "PayPal payment could not be prepared.";
+        setFormError(`Your booking was created, but PayPal checkout could not be prepared: ${reason} You have not been charged.`);
+      },
+    });
+  };
 
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => event.key === "Escape" && onClose();
@@ -145,13 +169,17 @@ export const LearnerBookingModal = ({
   }, [onClose]);
 
   const submitBooking = () => {
-    const studentId = toOptionalInteger(user?.id);
+    if (createdBookingId) {
+      preparePayPalPayment(createdBookingId);
+      return;
+    }
+    const learnerId = toOptionalInteger(user?.id);
     const serviceId = toOptionalInteger(selectedService?.id);
-    const teacherId = toOptionalInteger(selectedService?.tutor.id ?? selectedAvailability?.teacher_id);
+    const tutorId = toOptionalInteger(selectedService?.tutor.id ?? selectedAvailability?.tutor_id);
     const availabilityId = toOptionalInteger(selectedAvailability?.id);
 
-    if (!studentId) {
-      setFormError("Your student account could not be identified. Please sign in again.");
+    if (!learnerId) {
+      setFormError("Your learner account could not be identified. Please sign in again.");
       return;
     }
     if (!serviceId && !availabilityId) {
@@ -162,8 +190,8 @@ export const LearnerBookingModal = ({
       setFormError("Choose a service so the booking can be connected to the right tutor.");
       return;
     }
-    if (!teacherId) {
-      setFormError("This booking needs a teacher. Choose a service with an assigned tutor.");
+    if (!tutorId) {
+      setFormError("This booking needs a tutor. Choose a service with an assigned tutor.");
       return;
     }
     if (!availabilityId) {
@@ -182,22 +210,23 @@ export const LearnerBookingModal = ({
       setFormError("End time must be after the start time.");
       return;
     }
+    if (!selectedService || !Number.isFinite(selectedService.price) || selectedService.price < 0) {
+      setFormError("The selected service does not have a valid price.");
+      return;
+    }
 
     const payload: CreateBookingPayload = {
-      student_id: studentId,
-      learner_id: studentId,
+      learner_id: learnerId,
+      service_id: serviceId,
+      tutor_id: tutorId,
+      availability_id: availabilityId,
       booking_date: bookingDate,
       start_time: toApiTime(startTime),
       end_time: toApiTime(endTime),
+      total_price: selectedService.price,
       status: "Pending",
       notes: notes.trim(),
     };
-    if (serviceId !== null) payload.service_id = serviceId;
-    if (teacherId !== null) {
-      payload.teacher_id = teacherId;
-      payload.tutor_id = teacherId;
-    }
-    if (availabilityId !== null) payload.availability_id = availabilityId;
 
     setFormError("");
     setSuccessMessage("");
@@ -207,11 +236,9 @@ export const LearnerBookingModal = ({
           setFormError("The booking was submitted, but the server returned incomplete details.");
           return;
         }
-        setSuccessMessage(`Booking #${booking.id} was created with Pending status.`);
-        window.setTimeout(() => {
-          onClose();
-          navigate("/dashboard/learner/bookings");
-        }, 650);
+        const bookingId = Number(booking.id);
+        setCreatedBookingId(bookingId);
+        preparePayPalPayment(bookingId);
       },
       onError: (error) => {
         setFormError(error instanceof Error ? error.message : "Booking could not be created. Please try again.");
@@ -285,7 +312,7 @@ export const LearnerBookingModal = ({
               <span className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-slate-400">Available time slot</span>
               <select
                 value={selectedAvailabilityId}
-                disabled={!selectedTeacherId || availabilityQuery.isLoading}
+                disabled={!selectedTutorId || availabilityQuery.isLoading}
                 onChange={(event) => {
                   const nextId = event.target.value;
                   const nextSlot = activeAvailability.find((slot) => String(slot.id) === nextId);
@@ -300,7 +327,7 @@ export const LearnerBookingModal = ({
                 className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold text-slate-700 outline-none transition hover:border-slate-300 focus:border-haiti-navy focus:bg-white focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <option value="">
-                  {!selectedTeacherId
+                  {!selectedTutorId
                     ? "Choose a service first"
                     : availabilityQuery.isLoading
                       ? "Loading tutor availability..."
@@ -317,7 +344,7 @@ export const LearnerBookingModal = ({
                   Available times could not be loaded. Please try again from the Availability page.
                 </span>
               )}
-              {selectedTeacherId && !availabilityQuery.isLoading && !availabilityQuery.isError && activeAvailability.length === 0 && (
+              {selectedTutorId && !availabilityQuery.isLoading && !availabilityQuery.isError && activeAvailability.length === 0 && (
                 <span className="mt-2 block text-xs font-semibold text-slate-500">
                   This tutor has no active availability windows right now.
                 </span>
@@ -388,18 +415,39 @@ export const LearnerBookingModal = ({
             </div>
           )}
 
+          {paypalOrderId ? (
+            <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/30 p-4">
+              <p className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-haiti-navy">Secure PayPal checkout</p>
+              <PayPalCheckout
+                paypalOrderId={paypalOrderId}
+                onCompleted={() => {
+                  setFormError("");
+                  setSuccessMessage("Payment successful. Your lesson booking is paid.");
+                }}
+              />
+            </div>
+          ) : null}
+
           <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row">
             <button type="button" onClick={onClose} className="inline-flex h-12 flex-1 items-center justify-center rounded-xl border border-slate-200 text-sm font-bold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50">
               Close
             </button>
-            <button
+            {!paypalOrderId ? <button
               type="button"
               onClick={submitBooking}
-              disabled={createBooking.isPending}
+              disabled={createBooking.isPending || createPayPalOrder.isPending}
               className="inline-flex h-12 flex-[1.5] items-center justify-center gap-2 rounded-xl bg-haiti-navy px-6 text-sm font-bold text-white shadow-[0_8px_20px_rgba(6,67,159,.2)] transition hover:-translate-y-0.5 hover:bg-haiti-navy-dark disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-60"
             >
-              {createBooking.isPending ? <><span className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Creating booking</> : <>Create booking <FiArrowRight /></>}
-            </button>
+              {createBooking.isPending ? (
+                <><span className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Creating booking...</>
+              ) : createPayPalOrder.isPending ? (
+                <><span className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Preparing PayPal payment...</>
+              ) : createdBookingId ? (
+                <>Try PayPal again <FiArrowRight /></>
+              ) : (
+                <>Create booking &amp; continue to PayPal <FiArrowRight /></>
+              )}
+            </button> : null}
           </div>
         </div>
       </article>

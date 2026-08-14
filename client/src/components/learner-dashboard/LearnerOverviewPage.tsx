@@ -87,8 +87,7 @@ const statusName = (status?: string) => status?.trim() || "Pending";
 const bookingBelongsToLearner = (booking: Booking, learnerId?: number) =>
   Boolean(
     learnerId &&
-      (String(booking.student_id ?? "") === String(learnerId) ||
-        String(booking.learner_id ?? "") === String(learnerId)),
+      String(booking.learner_id ?? "") === String(learnerId),
   );
 
 const STATUS_BADGE_CLASSES: Record<string, string> = {

@@ -13,7 +13,7 @@ export type CreateTutorInput = {
   password: string;
 };
 
-export type TeacherProfileUser = {
+export type TutorProfileUser = {
   id?: number;
   email?: string;
   full_name?: string;
@@ -21,7 +21,7 @@ export type TeacherProfileUser = {
   created_at?: string;
 };
 
-export type TeacherProfile = {
+export type TutorProfile = {
   id: number;
   user_id?: number | null;
   full_name: string;

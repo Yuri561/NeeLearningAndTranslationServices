@@ -88,7 +88,7 @@ export const normalizeService = (value: unknown): AdminService => {
     durationMinutes: numberish(record, ["duration_minutes", "duration", "durationMinutes"]),
     price: numberish(record, ["price", "amount"]),
     isActive: boolish(record, ["is_active", "active", "enabled"]),
-    teacherId: idish(record, ["teacher_id", "tutor_id", "user_id"]),
+    tutorId: idish(record, ["tutor_id", "user_id"]),
     createdAt: text(record, ["created_at", "createdAt"]),
     raw: record,
   };
@@ -99,7 +99,7 @@ export const normalizeAvailability = (value: unknown): AdminAvailability => {
 
   return {
     id: fallbackId(record),
-    teacherId: idish(record, ["teacher_id", "tutor_id", "user_id"]),
+    tutorId: idish(record, ["tutor_id", "user_id"]),
     date: text(record, ["date", "booking_date", "availability_date"]),
     day: text(record, ["day", "day_of_week", "weekday"]),
     startTime: text(record, ["start_time", "startTime"]),
@@ -115,16 +115,15 @@ export const normalizeBooking = (value: unknown): AdminBooking => {
 
   return {
     id: fallbackId(record),
-    learnerId: idish(record, ["learner_id", "student_id"]),
-    studentId: idish(record, ["student_id", "learner_id"]),
-    tutorId: idish(record, ["tutor_id", "teacher_id"]),
-    teacherId: idish(record, ["teacher_id", "tutor_id"]),
+    learnerId: idish(record, ["learner_id"]),
+    tutorId: idish(record, ["tutor_id"]),
     serviceId: idish(record, ["service_id"]),
     availabilityId: idish(record, ["availability_id"]),
     bookingDate: text(record, ["booking_date", "date"]),
     startTime: text(record, ["start_time", "startTime"]),
     endTime: text(record, ["end_time", "endTime"]),
     status: text(record, ["status"]),
+    paymentStatus: text(record, ["payment_status", "paymentStatus"]),
     notes: text(record, ["notes", "message"]),
     createdAt: text(record, ["created_at", "createdAt"]),
     raw: record,
@@ -157,17 +156,16 @@ export const normalizeTranslationRequest = (value: unknown): AdminTranslationReq
     id: fallbackId(record),
     learnerId: idish(record, [
       "learner_id",
-      "student_id",
       "user_id",
       "submitted_by_user_id",
       "created_by_user_id",
     ]),
     learnerName:
-      text(record, ["learner_name", "student_name", "user_name", "full_name", "submitted_by_name"]) ??
-      nestedText(record, ["learner", "student", "user", "submitted_by"], ["full_name", "name", "email"]),
+      text(record, ["learner_name", "user_name", "full_name", "submitted_by_name"]) ??
+      nestedText(record, ["learner", "user", "submitted_by"], ["full_name", "name", "email"]),
     learnerEmail:
-      text(record, ["learner_email", "student_email", "user_email", "email", "submitted_by_email"]) ??
-      nestedText(record, ["learner", "student", "user", "submitted_by"], ["email"]),
+      text(record, ["learner_email", "user_email", "email", "submitted_by_email"]) ??
+      nestedText(record, ["learner", "user", "submitted_by"], ["email"]),
     sourceLanguage: text(record, [
       "source_language",
       "source_lang",

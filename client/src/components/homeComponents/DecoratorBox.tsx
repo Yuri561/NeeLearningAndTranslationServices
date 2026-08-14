@@ -38,12 +38,12 @@ const DecoratorBox: React.FC<DecoratorBoxProps> = ({
         whitespace-nowrap
         ${className}
       `}
-      aria-label="Student ratings and testimonials summary"
+      aria-label="Learner ratings and testimonials summary"
     >
       {/* ── Avatar stack ── */}
       <div
         className="flex items-center"
-        aria-label={`Student profiles (${avatars.length} shown)`}
+        aria-label={`Learner profiles (${avatars.length} shown)`}
       >
         {avatars.map((src, i) => (
           <img

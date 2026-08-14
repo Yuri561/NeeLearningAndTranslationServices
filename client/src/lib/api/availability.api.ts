@@ -18,11 +18,11 @@ export const availabilityApi = {
     return normalizeAvailability(response);
   },
 
-  getByTeacher: async (
-    teacherId: number | string
+  getByTutor: async (
+    tutorId: number | string
   ): Promise<AdminAvailability[]> => {
     const response = await apiRequest<unknown>(
-      `${API_BASE_PATH}/availability/tutor/${encodeURIComponent(String(teacherId))}`,
+      `${API_BASE_PATH}/availability/tutor/${encodeURIComponent(String(tutorId))}`,
       {},
       true
     );

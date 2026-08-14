@@ -67,14 +67,14 @@ export const AboutHero = () => {
 
       {/* Right — image container (hidden on small devices, visible on big devices lg+) */}
       <div className="hidden lg:flex lg:w-1/2 relative items-end justify-end mt-10 lg:mt-0 z-10 lg:self-end">
-        {/* background under teacher */}
+        {/* Background under tutor */}
         <img
           className="absolute w-full max-w-[500px] lg:max-w-[620px] h-auto opacity-70 z-0 pointer-events-none object-contain bottom-0 lg:bottom-4"
           src="/about-page-picture/bg-under-teacher.png"
           alt=""
           aria-hidden="true"
         />
-        {/* Teacher image anchored to bottom */}
+        {/* Tutor image anchored to bottom */}
         <img
           className="w-full max-w-[320px] sm:max-w-[420px] md:max-w-[480px] lg:max-w-[540px] xl:max-w-[600px] 2xl:max-w-[650px] h-auto object-contain object-bottom z-10 relative drop-shadow-2xl block"
           src="/about-page-picture/hero-about-image.png"

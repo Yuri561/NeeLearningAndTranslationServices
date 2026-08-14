@@ -153,7 +153,7 @@ const ProcessSection = () => {
           <div className="flex-shrink-0 max-[1024px]:w-full">
             <img
               src="/process-section2.jpg"
-              alt="Professional classroom and student learning environment"
+              alt="Professional classroom and learner environment"
               loading="lazy"
               decoding="async"
               className="w-[580px] h-[596px] rounded-[15px] block border border-blue-700/20 shadow-xs transition-[transform,box-shadow] duration-[600ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] [@media(hover:hover)]:hover:-translate-y-0.5 max-[1024px]:w-full max-[1024px]:h-auto max-[1024px]:max-h-[480px] max-[1024px]:object-cover max-[580px]:max-h-[320px]"
