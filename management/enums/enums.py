@@ -9,6 +9,7 @@ class Status(str, Enum):
     COMPLETED = "Completed"
     CONFIRMED = "Confirmed"
     CANCELLED = "Cancelled"
+    
 #used in availability schema   
 class Day(str, Enum):
     MONDAY = "Monday"
