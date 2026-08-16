@@ -30,6 +30,7 @@ def create_service(service: ServiceCreate, current_user: User = Depends(get_curr
        duration_minutes=service.duration_minutes,
        is_active=service.is_active,
        language=service.language,
+       meeting_platform = service.meeting_platform,
        tutor_id = current_user.id
         )
     db.add(new_service)
@@ -50,6 +51,7 @@ def create_bulk_services(services: list[ServiceCreate], current_user: User = Dep
             name=item.name,
             tutor_id=current_user.id,
             description=item.description,
+            meeting_platform = item.meeting_platform,
             category=item.category,
             price=item.price,
             duration_minutes=item.duration_minutes,

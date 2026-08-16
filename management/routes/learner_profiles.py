@@ -262,7 +262,8 @@ async def upload_learner_profile_picture(
         ).get_public_url(
             storage_path
         )
-
+        print("PUBLIC URL:", public_url)
+        print("PUBLIC URL TYPE:", type(public_url))
     except Exception as exc:
         # Clean up the newly uploaded image if URL creation fails
         try:

@@ -453,7 +453,7 @@ async def capture_paypal_order(
     # ---------------------------------------------------------
     # 17. Mark booking as paid
     # ---------------------------------------------------------
-    booking.status = "paid"
+    booking.status = "CONFIRMED" #change to reflect enum 
 
     # ---------------------------------------------------------
     # 18. Commit Payment + Booking together

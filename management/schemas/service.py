@@ -32,6 +32,7 @@ class ServiceCreate(BaseModel):
     category: str
     price: float
     duration_minutes: int
+    meeting_platform: Optional[str] | None = None
     is_active: bool = True
     language: LanguageCode
 
